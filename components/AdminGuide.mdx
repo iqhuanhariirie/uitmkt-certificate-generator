@@ -1,0 +1,53 @@
+# What is UITM KT E-Certificate System?
+
+The UITM KT E-Certificate System is a web application designed to streamline the process of securely generating and managing e-certificates for Social and Activity Clubs at Universiti Teknologi MARA, Kuala Terengganu campus. This system addresses challenges such as time-consuming processes, potential for errors, and lack of centralized verification, ensuring that e-certificates are issued with high standards of integrity, authenticity, and confidentiality.
+
+Through the use of ECDSA digital signature algorithm, the system provides cryptographic mechanisms to guarantee that certificates are tamper-proof and verifiable by any recipient or third party. This user guide will walk you through the process of using the UITM KT E-Certificate System and offer instructions on how to maximize its features, ensuring that your e-certificates remain secure and reliable.
+## Accessing UITM KT E-Certificate System
+
+1. On the UITM KT E-Certificate System admin page, you will be presented with a login screen.
+2. Login using your Gmail account, which has been authorized by the developer.
+
+## User Roles and Permissions
+
+UITM KT E-Certificate System supports different user roles, each with specific permissions. The available user roles include administrators and regular users. The permissions granted to each role determine the actions they can perform within the application.
+
+# Certificate Generation
+
+## Creating a New Event
+
+1. Navigate to the home page of the admin panel.
+2. Click on the "Add Event" button.
+3. Fill in the required information, such as the event title, description, event date, event banner, guest list, and certificate template.
+   - For the event banner, guest list, and certificate template, only the following file types are allowed:
+     - Event Banner and Certificate Template: .png, .jpg, .jpeg
+     - Guest List: .csv (with email and name headers only)
+
+## Importing Participant Data
+
+1. To generate certificates for participants, you need to import their data into UITM KT E-Certificate System.
+2. Prepare a CSV file containing the participant details, including their names and email addresses.
+3. Upload the CSV file in UITM KT E-Certificate System's import section.
+
+## Generating Certificates
+
+1. After creating an event, a webpage will be created specifically for it.
+2. To view the event page, go to your table of events and click on the dropdown menu next to the event row.
+3. Select "View Event Page" from the dropdown menu.
+
+## Deleting Events
+
+1. To delete an event, go to your table of events.
+2. Click on the dropdown menu next to the event row.
+3. Choose the "Delete" option from the dropdown menu.
+
+# Managing Certificates
+
+## Viewing Generated Certificates
+
+1. Regular users can access the page generated for the event.
+2. Regular users will be prompted to login via Google.
+3. Upon successful validation of a participant's email against the guest list stored in the database:
+   - A list of options to download a PDF of their certificate and add it to LinkedIn will be displayed.
+4. If a participant's email is not found on the guest list, they will see a message stating that they are an invalid guest and cannot generate a certificate.
+5. After generating a certificate, a verification link will be generated to ensure its validity. This verification link can be accessed by adding the certificate to LinkedIn and checking the certificate URL.
