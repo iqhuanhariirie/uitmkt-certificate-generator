@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react"; 
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { DataTable } from "@/components/DataTableParticipant";
@@ -9,39 +9,43 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import toast from "react-hot-toast";
 import { Users, Download } from "lucide-react";
+import { signCertificate } from "@/utils/signCertificate";
+import { generateCertificatePDF } from "@/utils/generateCertificatePDF";
 
 export function ParticipantList({ eventId }: { eventId: string }) {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    const fetchParticipants = async () => {
-      try {
-        setLoading(true);
-        const q = query(
-          collection(db, "certificates"),
-          where("eventId", "==", eventId)
-        );
+  const fetchParticipants = useCallback(async () => {
+    try {
+      setLoading(true);
+      const q = query(
+        collection(db, "certificates"),
+        where("eventId", "==", eventId)
+      );
 
-        const querySnapshot = await getDocs(q);
-        const participantsData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          eventId,
-          ...doc.data()
-        })) as Participant[];
+      const querySnapshot = await getDocs(q);
+      const participantsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        eventId,
+        ...doc.data(),
+        eventDate: doc.data().eventDate,
+        certificateTemplate: doc.data().certificateTemplate,
+      })) as Participant[];
 
-        setParticipants(participantsData);
-      } catch (error) {
-        console.error("Error fetching participants:", error);
-        toast.error("Failed to load participants");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchParticipants();
+      setParticipants(participantsData);
+    } catch (error) {
+      console.error("Error fetching participants:", error);
+      toast.error("Failed to load participants");
+    } finally {
+      setLoading(false);
+    }
   }, [eventId]);
+
+  useEffect(() => {
+    fetchParticipants();
+  }, [fetchParticipants]);
 
   const filteredParticipants = participants.filter(participant =>
     participant.guestName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -83,6 +87,72 @@ export function ParticipantList({ eventId }: { eventId: string }) {
     }
   };
 
+  const batchSignCertificates = async () => {
+    const pendingCertificates = participants.filter(p => p.status === 'pending');
+    const batchSize = 5;
+    
+    const toastId = toast.loading(
+      `Preparing to sign ${pendingCertificates.length} certificates...`
+    );
+  
+    try {
+      const certificateBatches = [];
+      for (let i = 0; i < pendingCertificates.length; i += batchSize) {
+        const batch = pendingCertificates.slice(i, i + batchSize);
+        
+        // Generate PDFs for the batch
+        const batchData = await Promise.all(
+          batch.map(async (cert) => ({
+            certificateId: cert.id,
+            pdfBytes: Array.from(await generateCertificatePDF(cert))
+          }))
+        );
+        
+        certificateBatches.push(batchData);
+      }
+  
+      let totalSuccess = 0;
+      let totalFailed = 0;
+  
+      // Process each batch
+      for (let i = 0; i < certificateBatches.length; i++) {
+        const batch = certificateBatches[i];
+        
+        toast.loading(
+          `Processing batch ${i + 1}/${certificateBatches.length}...`,
+          { id: toastId }
+        );
+  
+        const response = await fetch('/api/certificates/batch-sign', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ certificates: batch })
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to process batch');
+        }
+  
+        const result = await response.json();
+        totalSuccess += result.success;
+        totalFailed += result.failed;
+      }
+  
+      toast.success(
+        `Signed ${totalSuccess} certificates. Failed: ${totalFailed}`,
+        { id: toastId }
+      );
+  
+      // Refresh the participants list
+      await fetchParticipants();
+    } catch (error) {
+      console.error('Batch signing error:', error);
+      toast.error('Failed to complete batch signing', { id: toastId });
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -101,12 +171,7 @@ export function ParticipantList({ eventId }: { eventId: string }) {
           </Button>
           <Button
             variant="default"
-            onClick={() => {
-              toast.loading("Signing certificates...", {
-                id: "batch-signing",
-              });
-              // We'll implement batch signing later
-            }}
+            onClick={batchSignCertificates}
             disabled={!filteredParticipants.some(p => p.status === 'pending')}
           >
             Sign All Pending

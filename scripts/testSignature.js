@@ -8,7 +8,7 @@ const { pdflibAddPlaceholder } = require('@signpdf/placeholder-pdf-lib');
 async function testSignature() {
     try {
         // Verify environment variables
-        if (!process.env.NEXT_PUBLIC_P12_CERTIFICATE) {
+        if (!process.env.P12_CERTIFICATE) {
             throw new Error('P12 certificate not found in environment variables');
         }
 
@@ -47,10 +47,10 @@ async function testSignature() {
 
         // Create signer using base64 P12 from env
         console.log('Creating P12 signer...');
-        const p12Buffer = Buffer.from(process.env.NEXT_PUBLIC_P12_CERTIFICATE, 'base64');
+        const p12Buffer = Buffer.from(process.env.P12_CERTIFICATE, 'base64');
         
         const signer = new P12Signer(p12Buffer, {
-            passphrase: process.env.NEXT_PUBLIC_P12_PASSPHRASE || '1234'
+            passphrase: process.env.P12_PASSPHRASE || '1234'
         });
 
         // Sign PDF
@@ -88,7 +88,7 @@ async function testSignature() {
 // Add debugging for P12 from env
 function debugP12FromEnv() {
     try {
-        const p12Base64 = process.env.NEXT_PUBLIC_P12_CERTIFICATE;
+        const p12Base64 = process.env.P12_CERTIFICATE;
         if (!p12Base64) {
             throw new Error('P12 certificate not found in environment variables');
         }
@@ -96,7 +96,7 @@ function debugP12FromEnv() {
         const p12Buffer = Buffer.from(p12Base64, 'base64');
         console.log('\nP12 certificate details:');
         console.log('Certificate size:', p12Buffer.length, 'bytes');
-        console.log('Passphrase configured:', !!process.env.NEXT_PUBLIC_P12_PASSPHRASE);
+        console.log('Passphrase configured:', !!process.env.P12_PASSPHRASE);
         
         // Save temp file for OpenSSL verification
         const tempPath = './temp-cert.p12';
@@ -104,7 +104,7 @@ function debugP12FromEnv() {
         
         const { execSync } = require('child_process');
         const output = execSync(
-            `openssl pkcs12 -info -in ${tempPath} -noout -passin pass:${process.env.NEXT_PUBLIC_P12_PASSPHRASE || '1234'}`,
+            `openssl pkcs12 -info -in ${tempPath} -noout -passin pass:${process.env.P12_PASSPHRASE || '1234'}`,
             { encoding: 'utf8' }
         );
         console.log(output);
