@@ -1,3 +1,4 @@
+require('dotenv').config({ path: '.env.local' }); // Add this to load .env.local
 const fs = require('fs');
 const { SignPdf } = require('@signpdf/signpdf');
 const { P12Signer } = require('@signpdf/signer-p12');
@@ -6,6 +7,11 @@ const { pdflibAddPlaceholder } = require('@signpdf/placeholder-pdf-lib');
 
 async function testSignature() {
     try {
+        // Verify environment variables
+        if (!process.env.NEXT_PUBLIC_P12_CERTIFICATE) {
+            throw new Error('P12 certificate not found in environment variables');
+        }
+
         // Create test PDF
         console.log('Creating test PDF...');
         const pdfDoc = await PDFDocument.create();
@@ -32,20 +38,19 @@ async function testSignature() {
             contactInfo: 'uitm.kppim@uitm.edu.my',
             name: 'UITM KT CDCS230',
             location: 'Kuala Terengganu',
-            signatureLength: 8192, // Increased for RSA
-            subfilter: 'adbe.pkcs7.detached'
+            signatureLength: 3322, // Increased for RSA
+            subFilter: 'adbe.pkcs7.detached' // Fixed property name
         });
 
         const pdfBytesWithPlaceholder = await pdfDoc2.save();
         fs.writeFileSync('./test-with-placeholder.pdf', Buffer.from(pdfBytesWithPlaceholder));
 
-        // Create signer from P12
+        // Create signer using base64 P12 from env
         console.log('Creating P12 signer...');
-        const p12Buffer = fs.readFileSync('./certificatesRSA/certificate.p12');
+        const p12Buffer = Buffer.from(process.env.NEXT_PUBLIC_P12_CERTIFICATE, 'base64');
         
         const signer = new P12Signer(p12Buffer, {
-            passphrase: '1234',
-            encoding: 'binary'
+            passphrase: process.env.NEXT_PUBLIC_P12_PASSPHRASE || '1234'
         });
 
         // Sign PDF
@@ -80,14 +85,32 @@ async function testSignature() {
     }
 }
 
-// Add debugging for P12 file
-function debugP12(p12Path) {
+// Add debugging for P12 from env
+function debugP12FromEnv() {
     try {
+        const p12Base64 = process.env.NEXT_PUBLIC_P12_CERTIFICATE;
+        if (!p12Base64) {
+            throw new Error('P12 certificate not found in environment variables');
+        }
+
+        const p12Buffer = Buffer.from(p12Base64, 'base64');
+        console.log('\nP12 certificate details:');
+        console.log('Certificate size:', p12Buffer.length, 'bytes');
+        console.log('Passphrase configured:', !!process.env.NEXT_PUBLIC_P12_PASSPHRASE);
+        
+        // Save temp file for OpenSSL verification
+        const tempPath = './temp-cert.p12';
+        fs.writeFileSync(tempPath, p12Buffer);
+        
         const { execSync } = require('child_process');
-        console.log('\nP12 file details:');
-        const output = execSync(`openssl pkcs12 -info -in ${p12Path} -noout -passin pass:1234`, 
-            { encoding: 'utf8' });
+        const output = execSync(
+            `openssl pkcs12 -info -in ${tempPath} -noout -passin pass:${process.env.NEXT_PUBLIC_P12_PASSPHRASE || '1234'}`,
+            { encoding: 'utf8' }
+        );
         console.log(output);
+        
+        // Clean up temp file
+        fs.unlinkSync(tempPath);
         return true;
     } catch (error) {
         console.error('Error reading P12:', error.message);
@@ -95,14 +118,16 @@ function debugP12(p12Path) {
     }
 }
 
-// Verify P12 file exists and is readable
-if (!fs.existsSync('./certificatesRSA/certificate.p12')) {
-    console.error('P12 file not found at ./certificatesRSA/certificate.p12');
-    process.exit(1);
+// First install dotenv if not already installed
+if (!require.resolve('dotenv')) {
+    console.log('Installing dotenv...');
+    require('child_process').execSync('npm install dotenv');
+    console.log('dotenv installed');
 }
 
-if (!debugP12('./certificatesRSA/certificate.p12')) {
-    console.error('P12 file cannot be read properly');
+// Verify environment variables
+if (!debugP12FromEnv()) {
+    console.error('P12 certificate cannot be read from environment variables');
     process.exit(1);
 }
 

@@ -1,51 +1,63 @@
-"use client";
-
-import { Event } from "@/components/ui/columns";
+import { createContext, useContext, useState, useEffect } from "react";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/firebase/config";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
-import { ReactNode, createContext, useContext, useEffect, useState } from "react";
+import { Event } from "@/components/ui/columns"; // Import the Event type
 
+// Use the Event type instead of creating a new EventData type
 type EventDataContextType = {
   eventData: Event[];
   loading: boolean;
+  refreshData: () => Promise<void>;
 };
 
-const EventDataContext = createContext<EventDataContextType>({
-  eventData: [],
-  loading: true,
-});
+const EventDataContext = createContext<EventDataContextType | undefined>(undefined);
 
-export const EventDataContextProvider = ({
-  children,
-}: {
-  children: ReactNode;
-}) => {
+// Rename to EventDataContextProvider and export it
+export const EventDataContextProvider = ({ children }: { children: React.ReactNode }) => {
   const [eventData, setEventData] = useState<Event[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  useEffect(() => {
-    const q = query(collection(db, "events"), orderBy("eventDate", "desc"));
-    const unsubscribe = onSnapshot(q, (snap) => {
+  const [loading, setLoading] = useState(true);
+
+  const fetchEventData = async () => {
+    try {
       setLoading(true);
-      const data: Event[] = snap.docs.map((doc) => ({
+      const querySnapshot = await getDocs(collection(db, "events"));
+      console.log("Raw Firestore data:", querySnapshot.docs.map(doc => doc.data())); 
+
+      const data = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         name: doc.data().eventName,
         date: doc.data().eventDate,
         description: doc.data().description,
-        guests: doc.data().guestList.length,
-      }));
+        guests: doc.data().guestList?.length || 0,
+      })) as Event[];
+      console.log("Processed event data:", data); 
       setEventData(data);
       setLoading(false);
-    });
-    return () => unsubscribe();
+    } catch (error) {
+      console.error("Error fetching event data:", error);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEventData();
   }, []);
 
+  const refreshData = async () => {
+    await fetchEventData();
+  };
+
   return (
-    <EventDataContext.Provider value={{ eventData, loading }}>
+    <EventDataContext.Provider value={{ eventData, loading, refreshData }}>
       {children}
     </EventDataContext.Provider>
   );
 };
 
-export const EventData = () => {
-  return useContext(EventDataContext);
+export const useEventData = () => {
+  const context = useContext(EventDataContext);
+  if (context === undefined) {
+    throw new Error("useEventData must be used within an EventDataContextProvider");
+  }
+  return context;
 };

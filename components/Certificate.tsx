@@ -14,14 +14,33 @@ import { useEffect, useState } from "react";
 import { fetchDominantColorFromImage } from "@/utils/fetchDominantColorFromImage";
 import { getTextColor } from "@/utils/getTextColor";
 import { doc, updateDoc, Timestamp } from "firebase/firestore";
-import signpdf from '@signpdf/signpdf';
+import signpdf, { SignPdf } from '@signpdf/signpdf';
 import { P12Signer } from '@signpdf/signer-p12';
 import { pdflibAddPlaceholder } from '@signpdf/placeholder-pdf-lib';
 import { PDFDocument } from 'pdf-lib';
 import { db, storage } from '@/firebase/config';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-const Certificate = ({
+// Define signature info type and default values
+const DEFAULT_SIGNATURE_INFO = {
+  reason: 'Certificate Validation',
+  contactInfo: 'uitm.kppim@uitm.edu.my',
+  name: 'UITM KT CDCS230',
+  location: 'Kuala Terengganu'
+};
+
+type CertificateProps = {
+  eventDate: Timestamp;
+  certificateTemplate: string;
+  guestName: string;
+  studentID: string;
+  course: string;
+  part: number;
+  group: string;
+  certId: string;
+};
+
+const Certificate: React.FC<CertificateProps> = ({
   eventDate,
   certificateTemplate,
   guestName,
@@ -138,58 +157,82 @@ const Certificate = ({
     </Page>
   );
 
-  return (
-    <Document onRender={async (blob) => {
-      try {
-        
-        // 1. Generate PDF blob
-        const pdfBlob = await pdf(
-          <Document>{certificateContent}</Document>
-        ).toBlob();
+  const signPDF = async (pdfBytes: Uint8Array) => {
+    try {
+      // 2. Load PDF with pdf-lib
+      const pdfDoc = await PDFDocument.load(pdfBytes);
 
-        // 2. Convert Blob to ArrayBuffer
-        const pdfArrayBuffer = await pdfBlob.arrayBuffer();
+      // 3. Add signature placeholder
+      await pdflibAddPlaceholder({
+        pdfDoc,
+        reason: DEFAULT_SIGNATURE_INFO.reason,
+        contactInfo: DEFAULT_SIGNATURE_INFO.contactInfo,
+        name: DEFAULT_SIGNATURE_INFO.name,
+        location: DEFAULT_SIGNATURE_INFO.location,
+        signatureLength: 3322,  // Increased for RSA
+        subFilter: 'adbe.pkcs7.detached'  // Fixed property name
+      });
 
-        // 3. Load PDF with pdf-lib
-        const pdfDoc = await PDFDocument.load(new Uint8Array(pdfArrayBuffer));
+      // 4. Get PDF bytes with placeholder
+      const pdfBytesWithPlaceholder = await pdfDoc.save();
 
-        // 4. Add signature placeholder
-        await pdflibAddPlaceholder({
-          pdfDoc,
-          reason: 'Certificate Validation',
-          contactInfo: 'certificate@yourdomain.com',
-          name: 'Certificate Authority',
-          location: 'Your Organization',
-          signatureLength: 3322,
-        });
-
-        // 5. Serialize the PDF with placeholder
-        const pdfWithPlaceholder = await pdfDoc.save();
-
-        // 6. Create signer with P12 certificate
-        const signer = new P12Signer(Buffer.from(process.env.P12_CERTIFICATE!, 'base64'), {
-          passphrase: process.env.P12_PASSPHRASE
-        });
-
-        // 7. Sign the PDF
-        const signedPdf = await signpdf.sign(Buffer.from(pdfWithPlaceholder), signer);
-
-        // 8. Upload to Firebase Storage
-        const storageRef = ref(storage, `certificates/${certId}.pdf`);
-        await uploadBytes(storageRef, signedPdf);
-        const pdfUrl = await getDownloadURL(storageRef);
-
-        // 9. Update certificate document
-        await updateDoc(doc(db, 'certificates', certId), {
-          pdfUrl,
-          status: 'signed',
-          signedAt: Timestamp.now()
-        });
-
-      } catch (error) {
-        console.error('Error signing PDF:', error);
+      // 5. Create signer with P12 certificate
+      const p12Base64 = process.env.NEXT_PUBLIC_P12_CERTIFICATE;
+      if (!p12Base64) {
+        throw new Error('P12 certificate not configured');
       }
-    }}>
+
+      const signer = new P12Signer(Buffer.from(p12Base64, 'base64'), {
+        passphrase: process.env.NEXT_PUBLIC_P12_PASSPHRASE || '1234'
+      });
+
+      // 6. Sign the PDF
+      const signPdf = new SignPdf();
+      const signedPdf = await signPdf.sign(
+        Buffer.from(pdfBytesWithPlaceholder),
+        signer
+      );
+
+      // 7. Upload to Firebase Storage
+      const storageRef = ref(storage, `certificates/${certId}.pdf`);
+      await uploadBytes(storageRef, signedPdf);
+      const signedPdfUrl = await getDownloadURL(storageRef);
+
+      // 8. Update certificate document
+      await updateDoc(doc(db, 'certificates', certId), {
+        signedPdfUrl,
+        status: 'signed',
+        signedAt: Timestamp.now()
+      });
+
+      console.log('Certificate signed and uploaded successfully!');
+      return signedPdfUrl;
+
+    } catch (error) {
+      console.error('Error signing PDF:', error);
+      throw error;
+    }
+  };
+
+  return (
+    <Document
+      onRender={async (props) => {
+        try {
+          // Convert PDF to blob first
+          const pdfBlob = await pdf(
+            <Document>{certificateContent}</Document>
+          ).toBlob();
+          
+          // Convert blob to bytes
+          const pdfBytes = new Uint8Array(await pdfBlob.arrayBuffer());
+          
+          // Sign the PDF
+          await signPDF(pdfBytes);
+        } catch (error) {
+          console.error('Error in onRender:', error);
+        }
+      }}
+    >
       {certificateContent}
     </Document>
   );

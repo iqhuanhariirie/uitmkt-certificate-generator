@@ -22,8 +22,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { EventData } from "@/context/EventDataContext";
 import { useState } from "react";
+import { useEventData } from '../context/EventDataContext';
+
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -32,7 +33,9 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({
   columns,
 }: DataTableProps<TData, TValue>) {
-  const { eventData, loading } = EventData();
+  const { eventData, loading } = useEventData();
+  console.log("EventData in DataTable:", eventData); 
+  console.log("Loading state:", loading);
   const data = eventData as TData[];
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const table = useReactTable({

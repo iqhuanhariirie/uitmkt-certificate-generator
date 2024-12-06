@@ -8,11 +8,45 @@ import {
   addDoc,
   collection,
   doc,
+  getDoc,
   getDocs,
   query,
   updateDoc,
   where,
 } from "firebase/firestore";
+
+export type SignatureInfo = {
+  reason: string;
+  contactInfo: string;
+  name: string;
+  location: string;
+};
+
+export type Certificate = {
+  eventId: string;
+  guestName: string;
+  studentID: string;
+  email: string;
+  course: string;
+  part: number;
+  group: string;
+  certId: string;
+  status: 'pending' | 'signed' | 'error';
+  createdAt: Timestamp;
+  certificateTemplate: string;
+  signedPdfUrl: string | null;
+  signedAt: Timestamp | null;
+  signatureInfo: SignatureInfo;
+  errorMessage?: string | null;
+};
+
+// Add default signature info
+const DEFAULT_SIGNATURE_INFO: SignatureInfo = {
+  reason: 'Certificate Validation',
+  contactInfo: 'uitm.kppim@uitm.edu.my',
+  name: 'UITM KT CDCS230',
+  location: 'Kuala Terengganu'
+};
 
 export type Guest = {
   email: string;
@@ -49,7 +83,7 @@ export const sendDocumentToFirestore = async (payload: FormType) => {
       description: payload.description || "",
       eventDate: payload.eventDate ? Timestamp.fromDate(payload.eventDate) : Timestamp.now(),
     });
-    
+
     // 3. Upload files
     // Compress event banner to ensure fast loading of event page. It is blurred so losing quality is fine.
     const compressedBanner = await compressBanner(payload.eventBanner);
@@ -77,9 +111,13 @@ export const sendDocumentToFirestore = async (payload: FormType) => {
         certId: guest.certId,
         status: 'pending',
         createdAt: Timestamp.now(),
-        certificateTemplate: certificateTemplateURL // Store template URL for certificate generation
-      });
-      
+        certificateTemplate: certificateTemplateURL,
+        signedPdfUrl: null,
+        signedAt: null,
+        signatureInfo: DEFAULT_SIGNATURE_INFO,
+        errorMessage: null
+      } as Certificate);
+
       return {
         ...guest,
         certificateId: certRef.id // Add reference to certificate document
@@ -123,7 +161,10 @@ export const editDocumentInFirestore = async ({
     // 2. Handle guest list if provided
     if (payload.guestList) {
       const parsedGuestList: Guest[] = await parseCSV(payload.guestList);
-      
+
+      const eventDoc = await getDoc(eventDocRef);
+      const certificateTemplateURL = eventDoc.data()?.certificateTemplate || '';
+
       // Create new certificate documents
       const certificatePromises = parsedGuestList.map(async (guest) => {
         const certRef = await addDoc(collection(db, 'certificates'), {
@@ -136,9 +177,15 @@ export const editDocumentInFirestore = async ({
           group: guest.group,
           certId: guest.certId,
           status: 'pending',
-          createdAt: Timestamp.now()
-        });
-        
+          createdAt: Timestamp.now(),
+          certificateTemplate: certificateTemplateURL, // Add this
+          signedPdfUrl: null,
+          signedAt: null,
+          signatureInfo: DEFAULT_SIGNATURE_INFO,
+          errorMessage: null
+        } as Certificate);
+
+
         return {
           ...guest,
           certificateId: certRef.id
@@ -175,10 +222,10 @@ export const editDocumentInFirestore = async ({
       );
       const certificatesSnapshot = await getDocs(certificatesQuery);
 
-      const templateUpdatePromises = certificatesSnapshot.docs.map(doc => 
+      const templateUpdatePromises = certificatesSnapshot.docs.map(doc =>
         updateDoc(doc.ref, { certificateTemplate: certificateTemplateURL })
       );
-      
+
       await Promise.all(templateUpdatePromises);
     }
 
