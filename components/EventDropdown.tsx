@@ -18,11 +18,14 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { deleteFromFirebase } from "@/utils/deleteFromFirebase";
+import {
+  deleteFromFirebase
+} from "@/utils/deleteFromFirebase";
 import Link from "next/link";
 import { Event } from "@/components/ui/columns";
 import { EventForm } from "@/components/EventForm";
 import { useState } from "react";
+import { Users } from "lucide-react";
 
 export const EventDropdown = ({ eventData }: { eventData: Event }) => {
   const [editOpen, setEditOpen] = useState(false);
@@ -53,6 +56,15 @@ export const EventDropdown = ({ eventData }: { eventData: Event }) => {
               <DropdownMenuItem>View Event Page</DropdownMenuItem>
             </a>
           </Link>
+          <DropdownMenuItem>
+            <Link 
+              href={`/event/${eventData.id}/participant`}
+              className="flex items-center"
+            >
+              <Users className="mr-2 h-4 w-4" />
+              View Participants
+            </Link>
+          </DropdownMenuItem>
           <Dialog open={editOpen} onOpenChange={setEditOpen}>
             <DialogTrigger asChild>
               <DropdownMenuItem
@@ -120,3 +132,4 @@ export const EventDropdown = ({ eventData }: { eventData: Event }) => {
     </>
   );
 };
+
