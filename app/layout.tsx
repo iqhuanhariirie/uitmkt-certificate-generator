@@ -3,6 +3,8 @@ import { ThemeContext } from "@/context/ThemeContext";
 import { Toaster } from "react-hot-toast";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 
 const inter = Inter({ subsets: ["latin"] });
 

@@ -38,3 +38,6 @@ next-env.d.ts
 # private and public keys
 /certificatesRSA
 
+# pdf
+/*.pdf
+

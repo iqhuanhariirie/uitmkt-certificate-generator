@@ -6,8 +6,8 @@ import { doc, getDoc } from "firebase/firestore";
 import { Participant } from "@/components/ui/participant-columns";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { PDFViewer } from "@react-pdf/renderer";
-import Certificate from "@/components/Certificate";
+import { Worker, Viewer } from '@react-pdf-viewer/core';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import {
   Card,
   CardContent,
@@ -25,6 +25,9 @@ export default function ViewCertificatePage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  // Create the plugin instance
+  const defaultLayoutPluginInstance = defaultLayoutPlugin();
 
   useEffect(() => {
     const fetchCertificate = async () => {
@@ -163,14 +166,19 @@ export default function ViewCertificatePage({
           <CardTitle>Certificate Preview</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="bg-white rounded-lg shadow-inner p-4">
-            <PDFViewer className="w-full h-[800px]">
-              <Certificate
-                certificateTemplate={certificate.certificateTemplate}
-                guestName={certificate.guestName}
-                
-              />
-            </PDFViewer>
+          <div className="bg-white rounded-lg shadow-inner">
+            <div style={{ height: '800px' }}>
+              <Worker workerUrl="/assets/pdf/pdf.worker.min.js">
+                <Viewer
+                  fileUrl={certificate.signedPdfUrl || certificate.certificateTemplate}
+                  plugins={[defaultLayoutPluginInstance]}
+                  theme={{
+                    theme: 'dark',
+                  }}
+                  
+                />
+              </Worker>
+            </div>
           </div>
         </CardContent>
       </Card>
