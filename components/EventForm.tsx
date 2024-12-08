@@ -27,6 +27,8 @@ import { CalendarIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { ButtonRingLoader } from "./RingLoader";
+import CertificatePreview from "./CertificatePreview";
+import { useState } from "react";
 
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png"];
 const ACCEPTED_GUEST_LIST_TYPES = ["text/csv"];
@@ -71,6 +73,11 @@ const addingFormSchema = z.object({
       (file) => ACCEPTED_IMAGE_TYPES.includes(file?.type),
       "Only .jpeg, .jpg, and .png file types are supported."
     ),
+  namePosition: z.object({
+    top: z.number().min(0).max(100),
+    left: z.number().min(0).max(100),
+    fontSize: z.number().min(8).max(72),
+  }),
 });
 
 const editingFormSchema = z.object({
@@ -138,7 +145,8 @@ export const EventForm = ({
   currentEventDate,
   id,
 }: EventFormProps) => {
-  // Define your form.
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
   const currentResolver = id ? editingFormSchema : addingFormSchema;
   const form = useForm<FormType>({
     resolver: zodResolver(currentResolver),
@@ -150,12 +158,11 @@ export const EventForm = ({
     },
   });
 
-  const { formState } = form; // Destructure from form the form state which tells us if form is valid or not.
+  const { formState } = form;
 
-  // Define a submit handler.
   const onSubmit = async (payload: FormType) => {
     console.log("Payload before sending to Firestore:", payload);
-  
+
     if (id) {
       await editDocumentInFirestore({ payload, id });
     } else {
@@ -169,29 +176,33 @@ export const EventForm = ({
 
   const handleGuestList = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      const file = event.target.files[0]; // Get the selected file
-      console.log(file);
-      form.setValue("guestList", file); // Set the file as the value of guestList field
-      form.trigger("guestList"); // Manually triggering validation because of custom <Input /> component
+      const file = event.target.files[0];
+      form.setValue("guestList", file);
+      form.trigger("guestList");
     }
   };
 
   const handleEventBanner = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      const file = event.target.files[0]; // Get the selected file
-      form.setValue("eventBanner", file); // Set the file as the value of eventBanner field
-      form.trigger("eventBanner"); // Manually triggering validation because of custom <Input /> component
+      const file = event.target.files[0];
+      form.setValue("eventBanner", file);
+      form.trigger("eventBanner");
     }
   };
 
-  const handleCertificateTemplate = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleCertificateTemplate = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      const file = event.target.files[0]; // Get the selected file
-      form.setValue("certificateTemplate", file); // Set the file as the value of certificateTemplate field
-      form.trigger("certificateTemplate"); // Manually triggering validation because of custom <Input /> component
+      const file = event.target.files[0];
+      form.setValue("certificateTemplate", file);
+      form.trigger("certificateTemplate");
+
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
     }
+  };
+
+  const handlePositionChange = (position: { top: number; left: number; fontSize: number }) => {
+    form.setValue("namePosition", position);
   };
 
   return (
@@ -303,6 +314,25 @@ export const EventForm = ({
             </FormItem>
           )}
         />
+        {previewUrl && (
+          <FormField
+            control={form.control}
+            name="namePosition"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name Position</FormLabel>
+                <FormControl>
+                  <CertificatePreview
+                    templateUrl={previewUrl}
+                    sampleName="John Doe"
+                    onPositionChange={handlePositionChange}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         {formState.isSubmitting ? (
           <Button disabled>
             <ButtonRingLoader />
