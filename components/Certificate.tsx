@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
   nameContainer: {
     position: 'relative',
     width: '100%',
-    top: '50%', // Adjust this to match your template
+    top: '8%', // Adjust this to match your template
     left: 0,
     textAlign: 'center',
   },

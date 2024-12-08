@@ -29,6 +29,9 @@ export async function POST(request: NextRequest) {
 
     // 1. Create PDF with placeholder
     const pdfDoc = await PDFDocument.load(pdfBuffer);
+    
+    pdfDoc.setTitle(certificateId);
+    
     await pdflibAddPlaceholder({
       pdfDoc,
       reason: 'Certificate Validation',

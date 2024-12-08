@@ -32,7 +32,6 @@ export async function verifySignature(pdfBuffer: ArrayBuffer): Promise<{
     const author = pdfDoc.getAuthor();
     const subject = pdfDoc.getSubject();
     const keywords = pdfDoc.getKeywords();
-    const producer = pdfDoc.getProducer();
     const modificationDate = pdfDoc.getModificationDate();
 
     // Get signature info from metadata
@@ -62,16 +61,8 @@ export async function verifySignature(pdfBuffer: ArrayBuffer): Promise<{
       };
     }
 
-    // Extract signature information
-    const signatureInfo = {
-      reason: subject || dictionary.get(PDFName.of('Reason'))?.toString() || 'Certificate Validation',
-      name: author || dictionary.get(PDFName.of('Name'))?.toString() || 'UITM KT CDCS230',
-      location: keywords || dictionary.get(PDFName.of('Location'))?.toString() || 'Kuala Terengganu',
-      signedAt: modificationDate
-    };
-
-    // Extract certificate ID from Producer metadata
-    const certificateId = producer;
+    // Extract certificate ID from Title metadata
+    const certificateId = title;
 
     if (!certificateId) {
       return {
@@ -79,6 +70,14 @@ export async function verifySignature(pdfBuffer: ArrayBuffer): Promise<{
         error: 'Invalid certificate format'
       };
     }
+
+    // Extract signature information
+    const signatureInfo = {
+      reason: subject || dictionary.get(PDFName.of('Reason'))?.toString() || 'Certificate Validation',
+      name: author || dictionary.get(PDFName.of('Name'))?.toString() || 'UITM KT CDCS230',
+      location: keywords || dictionary.get(PDFName.of('Location'))?.toString() || 'Kuala Terengganu',
+      signedAt: modificationDate
+    };
 
     return {
       isValid: true,

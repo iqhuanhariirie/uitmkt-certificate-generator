@@ -154,30 +154,30 @@ export default function VerifyPage() {
 
           {/* Verification Result */}
           {verificationResult?.certificate && (
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4">Certificate Details</h3>
+            <div className="mt-6 p-4 bg-gray-100 rounded-lg">
+              <h3 className="text-lg font-semibold mb-4 text-blue-900">Certificate Details</h3>
               <dl className="grid grid-cols-2 gap-4">
                 <div>
                   <dt className="text-sm text-gray-500">Name</dt>
-                  <dd className="font-medium">{verificationResult.certificate.guestName}</dd>
+                  <dd className="font-medium text-blue-900">{verificationResult.certificate.guestName}</dd>
                 </div>
                 <div>
                   <dt className="text-sm text-gray-500">Student ID</dt>
-                  <dd className="font-medium">{verificationResult.certificate.studentID}</dd>
+                  <dd className="font-medium text-blue-900">{verificationResult.certificate.studentID}</dd>
                 </div>
                 <div>
                   <dt className="text-sm text-gray-500">Course</dt>
-                  <dd className="font-medium">{verificationResult.certificate.course}</dd>
+                  <dd className="font-medium text-blue-900">{verificationResult.certificate.course}</dd>
                 </div>
                 {verificationResult.signatureInfo && (
                   <>
                     <div>
                       <dt className="text-sm text-gray-500">Signed By</dt>
-                      <dd className="font-medium">{verificationResult.signatureInfo.name}</dd>
+                      <dd className="font-medium text-blue-900">{verificationResult.signatureInfo.name}</dd>
                     </div>
                     <div>
                       <dt className="text-sm text-gray-500">Signed At</dt>
-                      <dd className="font-medium">
+                      <dd className="font-medium text-blue-900">
                         {verificationResult.signatureInfo.signedAt?.toLocaleString()}
                       </dd>
                     </div>
