@@ -206,143 +206,145 @@ export const EventForm = ({
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="eventDate"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Event Date</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-[240px] pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={(date) =>
-                      date > new Date() || date < new Date("1900-01-01")
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="eventName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Event Name</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Event Description</FormLabel>
-              <FormControl>
-                <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="eventBanner"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Event Banner</FormLabel>
-              <FormControl>
-                <Input type="file" onChange={handleEventBanner} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="guestList"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Participant List</FormLabel>
-              <FormControl>
-                <Input type="file" onChange={handleGuestList} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="certificateTemplate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Certificate Template</FormLabel>
-              <FormControl>
-                <Input type="file" onChange={handleCertificateTemplate} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {previewUrl && (
+    <div className="max-h-[80vh] overflow-y-auto px-4">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <FormField
             control={form.control}
-            name="namePosition"
+            name="eventDate"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Event Date</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-[240px] pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("1900-01-01")
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="eventName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name Position</FormLabel>
+                <FormLabel>Event Name</FormLabel>
                 <FormControl>
-                  <CertificatePreview
-                    templateUrl={previewUrl}
-                    sampleName="John Doe"
-                    onPositionChange={handlePositionChange}
-                  />
+                  <Input {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-        )}
-        {formState.isSubmitting ? (
-          <Button disabled>
-            <ButtonRingLoader />
-          </Button>
-        ) : (
-          <Button type="submit" disabled={!formState.isValid}>
-            Submit
-          </Button>
-        )}
-      </form>
-    </Form>
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Event Description</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="eventBanner"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Event Banner</FormLabel>
+                <FormControl>
+                  <Input type="file" onChange={handleEventBanner} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="guestList"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Participant List</FormLabel>
+                <FormControl>
+                  <Input type="file" onChange={handleGuestList} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="certificateTemplate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Certificate Template</FormLabel>
+                <FormControl>
+                  <Input type="file" onChange={handleCertificateTemplate} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {previewUrl && (
+            <FormField
+              control={form.control}
+              name="namePosition"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name Position</FormLabel>
+                  <FormControl>
+                    <CertificatePreview
+                      templateUrl={previewUrl}
+                      sampleName="John Doe"
+                      onPositionChange={handlePositionChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+          {formState.isSubmitting ? (
+            <Button disabled>
+              <ButtonRingLoader />
+            </Button>
+          ) : (
+            <Button type="submit" disabled={!formState.isValid}>
+              Submit
+            </Button>
+          )}
+        </form>
+      </Form>
+    </div>
   );
 };
