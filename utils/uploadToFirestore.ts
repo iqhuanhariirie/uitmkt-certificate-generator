@@ -84,6 +84,11 @@ export const sendDocumentToFirestore = async (payload: FormType) => {
       eventName: payload.eventName || "",
       description: payload.description || "",
       eventDate: payload.eventDate ? Timestamp.fromDate(payload.eventDate) : Timestamp.now(),
+      namePosition: {
+        top: payload.namePosition.top,
+        left: payload.namePosition.left,
+        fontSize: payload.namePosition.fontSize
+      },
     });
 
     // 3. Upload files

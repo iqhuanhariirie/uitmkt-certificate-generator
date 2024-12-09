@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import * as Slider from '@radix-ui/react-slider';
 
 interface CertificatePreviewProps {
@@ -17,15 +17,24 @@ const CertificatePreview = ({ templateUrl, sampleName, onPositionChange }: Certi
     setPosition(newPosition);
     onPositionChange(newPosition);
   };
+  const containerRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="space-y-4">
-      <div className="relative w-full h-[400px] border rounded-lg overflow-hidden">
+      <div
+        ref={containerRef}
+        className="relative w-full h-[400px] border rounded-lg overflow-hidden"
+      >
+        <div className="absolute inset-0 grid grid-cols-10 grid-rows-10 pointer-events-none opacity-10">
+          {Array.from({ length: 100 }).map((_, i) => (
+            <div key={i} className="border border-black" />
+          ))}
+        </div>
         {templateUrl && (
           <>
-            <img 
-              src={templateUrl} 
-              alt="Certificate Template" 
+            <img
+              src={templateUrl}
+              alt="Certificate Template"
               className="absolute w-full h-full object-contain"
             />
             <div
@@ -35,10 +44,14 @@ const CertificatePreview = ({ templateUrl, sampleName, onPositionChange }: Certi
                 left: `${position.left}%`,
                 transform: 'translate(-50%, -50%)',
                 fontSize: `${position.fontSize}px`,
+                fontWeight: 'bold',
               }}
               className="font-bold text-black"
             >
               {sampleName}
+              <div className="text-xs text-red-500">
+                {`${Math.round(position.left)}%, ${Math.round(position.top)}%`}
+              </div>
             </div>
           </>
         )}

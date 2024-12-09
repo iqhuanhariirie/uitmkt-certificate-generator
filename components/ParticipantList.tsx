@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, getDoc, doc } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { DataTable } from "@/components/DataTableParticipant";
 import { participantColumns, Participant } from "./ui/participant-columns";
@@ -27,14 +27,27 @@ export function ParticipantList({ eventId }: { eventId: string }) {
         where("eventId", "==", eventId)
       );
 
-      const querySnapshot = await getDocs(q);
-      const participantsData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        eventId,
-        ...doc.data(),
-        eventDate: doc.data().eventDate,
-        certificateTemplate: doc.data().certificateTemplate,
-      })) as Participant[];
+      // First get the event details to get the namePosition
+    const eventDoc = await getDoc(doc(db, "events", eventId));
+    if (!eventDoc.exists()) {
+      throw new Error("Event not found");
+    }
+    const eventData = eventDoc.data();
+
+    const querySnapshot = await getDocs(q);
+    const participantsData = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      eventId,
+      ...doc.data(),
+      eventDate: doc.data().eventDate,
+      certificateTemplate: doc.data().certificateTemplate,
+      namePosition: eventData.namePosition || {  // Add the namePosition from event
+        top: 50,
+        left: 50,
+        fontSize: 24
+      }
+    })) as Participant[];
+
 
       setParticipants(participantsData);
     } catch (error) {

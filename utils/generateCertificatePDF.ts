@@ -3,10 +3,17 @@ import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 interface CertificateData {
   certificateTemplate: string;
   guestName: string;
+  namePosition: {
+    top: number;
+    left: number;
+    fontSize: number;
+  };
 }
 
 export async function generateCertificatePDF(participant: CertificateData): Promise<Uint8Array> {
   try {
+    console.log('Generating PDF with position:', participant.namePosition);
+
     // Create a new PDFDocument
     const pdfDoc = await PDFDocument.create();
 
@@ -36,15 +43,21 @@ export async function generateCertificatePDF(participant: CertificateData): Prom
     // Embed the font
     const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-    // Calculate text position (center of page, slightly above middle)
-    const centerX = width / 2;
-    const nameY = height * 0.5; // Adjust this value to match your template
+    // Calculate text position using the namePosition percentages
+    const nameX = (participant.namePosition.left / 100) * width;
+    const nameY = height - ((participant.namePosition.top / 100) * height);
 
-    // Add participant name
+    // Get text width for centering
+    const textWidth = font.widthOfTextAtSize(
+      participant.guestName, 
+      participant.namePosition.fontSize
+    );
+
+    // Add participant name with position and font size from namePosition
     page.drawText(participant.guestName, {
-      x: centerX - (font.widthOfTextAtSize(participant.guestName, 24) / 2),
-      y: nameY,
-      size: 24,
+      x: nameX - (textWidth / 2), // Center text horizontally
+      y: nameY - (participant.namePosition.fontSize / 3), // Adjust vertical position for baseline
+      size: participant.namePosition.fontSize,
       font: font,
       color: rgb(0, 0, 0),
     });

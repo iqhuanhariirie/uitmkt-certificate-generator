@@ -33,6 +33,11 @@ export type Participant = {
     errorMessage?: string;
     eventDate: Timestamp;
     certificateTemplate: string;
+    namePosition: { 
+        top: number;
+        left: number;
+        fontSize: number;
+      };
 };
 
 export const participantColumns: ColumnDef<Participant>[] = [

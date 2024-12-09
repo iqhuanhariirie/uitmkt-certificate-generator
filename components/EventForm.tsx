@@ -167,33 +167,34 @@ export const EventForm = ({
   const { formState } = form;
 
   const onSubmit = async (payload: FormType) => {
-   try {
-     console.log("Payload before sending to Firestore:", payload);
-     console.log("Guest list file:", payload.guestList);
- 
-     if (id) {
-       await editDocumentInFirestore({ payload, id });
-     } else {
-       await sendDocumentToFirestore(payload);
-     }
-     await refreshData();
-     handleDialogClose();
-     if (handleDropdownClose !== undefined) {
-       handleDropdownClose();
-     }
-   } catch (error) {
+    try {
+      console.log("Submitting form with name position:", payload.namePosition);
+      console.log("Payload before sending to Firestore:", payload);
+      console.log("Guest list file:", payload.guestList);
+
+      if (id) {
+        await editDocumentInFirestore({ payload, id });
+      } else {
+        await sendDocumentToFirestore(payload);
+      }
+      await refreshData();
+      handleDialogClose();
+      if (handleDropdownClose !== undefined) {
+        handleDropdownClose();
+      }
+    } catch (error) {
       console.error("Error submitting form:", error);
-    
-   }
+
+    }
   };
-  
+
   const handleGuestList = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
       console.log("Setting guest list file:", file);
-      form.setValue("guestList", file, { 
+      form.setValue("guestList", file, {
         shouldValidate: true,
-        shouldDirty: true 
+        shouldDirty: true
       });
       form.trigger("guestList");
     }
