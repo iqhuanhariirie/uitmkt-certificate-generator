@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     await certRef.update({
       status: 'signed',
       signedPdfUrl,
-      signedAt: FieldValue.serverTimestamp() // Use server timestamp
+      signedAt: FieldValue.serverTimestamp()
     });
 
     return NextResponse.json({ 

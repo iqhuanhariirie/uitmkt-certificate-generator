@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
         const pdfBuffer = new Uint8Array(pdfBytes);
 
         const pdfDoc = await PDFDocument.load(pdfBuffer);
+        pdfDoc.setTitle(certificateId);
         await pdflibAddPlaceholder({
           pdfDoc,
           reason: 'Certificate Validation',
