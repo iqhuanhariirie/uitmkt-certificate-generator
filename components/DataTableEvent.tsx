@@ -34,8 +34,7 @@ export function DataTable<TData, TValue>({
   columns,
 }: DataTableProps<TData, TValue>) {
   const { eventData, loading } = useEventData();
-  console.log("EventData in DataTable:", eventData); 
-  console.log("Loading state:", loading);
+  
   const data = eventData as TData[];
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const table = useReactTable({

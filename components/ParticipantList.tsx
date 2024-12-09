@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react"; 
+import { useEffect, useState, useCallback } from "react";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { DataTable } from "@/components/DataTableParticipant";
@@ -11,8 +11,10 @@ import toast from "react-hot-toast";
 import { Users, Download } from "lucide-react";
 import { signCertificate } from "@/utils/signCertificate";
 import { generateCertificatePDF } from "@/utils/generateCertificatePDF";
+import { useAuth } from "@/context/AuthContext"; // Add this import
 
 export function ParticipantList({ eventId }: { eventId: string }) {
+  const { user, checkIfUserIsAdmin } = useAuth(); // Add this line
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -58,7 +60,7 @@ export function ParticipantList({ eventId }: { eventId: string }) {
       const headers = ["Name", "Student ID", "Email", "Course", "Part", "Group", "Status"];
       const csvContent = [
         headers.join(","),
-        ...filteredParticipants.map(p => 
+        ...filteredParticipants.map(p =>
           [
             p.guestName,
             p.studentID,
@@ -67,8 +69,7 @@ export function ParticipantList({ eventId }: { eventId: string }) {
             p.part,
             p.group,
             p.status
-          ].join(",")
-        )
+          ].join(","))
       ].join("\n");
 
       const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -88,18 +89,26 @@ export function ParticipantList({ eventId }: { eventId: string }) {
   };
 
   const batchSignCertificates = async () => {
+    // Add auth check at the start of the function
+    if (!user || !checkIfUserIsAdmin(user)) {
+      toast.error("You must be an admin to sign certificates");
+      return;
+    }
+
     const pendingCertificates = participants.filter(p => p.status === 'pending');
     const batchSize = 5;
-    
+
     const toastId = toast.loading(
       `Preparing to sign ${pendingCertificates.length} certificates...`
     );
-  
+
     try {
+      const idToken = await user.getIdToken();
+      console.log("Got ID token:", idToken.substring(0, 10) + "...");
       const certificateBatches = [];
       for (let i = 0; i < pendingCertificates.length; i += batchSize) {
         const batch = pendingCertificates.slice(i, i + batchSize);
-        
+
         // Generate PDFs for the batch
         const batchData = await Promise.all(
           batch.map(async (cert) => ({
@@ -107,44 +116,47 @@ export function ParticipantList({ eventId }: { eventId: string }) {
             pdfBytes: Array.from(await generateCertificatePDF(cert))
           }))
         );
-        
+
         certificateBatches.push(batchData);
       }
-  
+
       let totalSuccess = 0;
       let totalFailed = 0;
-  
+
       // Process each batch
       for (let i = 0; i < certificateBatches.length; i++) {
         const batch = certificateBatches[i];
-        
+
         toast.loading(
           `Processing batch ${i + 1}/${certificateBatches.length}...`,
           { id: toastId }
         );
-  
+
         const response = await fetch('/api/certificates/batch-sign', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
           },
           body: JSON.stringify({ certificates: batch })
         });
-  
+
         if (!response.ok) {
-          throw new Error('Failed to process batch');
+          const errorData = await response.json();
+          console.error("Server response:", errorData); // Log server error
+          throw new Error(errorData.error || 'Failed to process batch');
         }
-  
+
         const result = await response.json();
         totalSuccess += result.success;
         totalFailed += result.failed;
       }
-  
+
       toast.success(
         `Signed ${totalSuccess} certificates. Failed: ${totalFailed}`,
         { id: toastId }
       );
-  
+
       // Refresh the participants list
       await fetchParticipants();
     } catch (error) {
@@ -172,7 +184,11 @@ export function ParticipantList({ eventId }: { eventId: string }) {
           <Button
             variant="default"
             onClick={batchSignCertificates}
-            disabled={!filteredParticipants.some(p => p.status === 'pending')}
+            disabled={
+              !filteredParticipants.some(p => p.status === 'pending') ||
+              !user ||
+              !checkIfUserIsAdmin(user) // Add this condition
+            }
           >
             Sign All Pending
           </Button>
@@ -187,7 +203,7 @@ export function ParticipantList({ eventId }: { eventId: string }) {
           className="max-w-sm"
         />
       </div>
-      
+
       {loading ? (
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
@@ -196,8 +212,8 @@ export function ParticipantList({ eventId }: { eventId: string }) {
           </div>
         </div>
       ) : (
-        <DataTable 
-          columns={participantColumns} 
+        <DataTable
+          columns={participantColumns}
           data={filteredParticipants}
         />
       )}

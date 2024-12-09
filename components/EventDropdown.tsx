@@ -26,11 +26,14 @@ import { Event } from "@/components/ui/columns";
 import { EventForm } from "@/components/EventForm";
 import { useState } from "react";
 import { Users } from "lucide-react";
+import { useEventData } from "@/context/EventDataContext";
 
 export const EventDropdown = ({ eventData }: { eventData: Event }) => {
+  const { refreshData } = useEventData();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const handleEditDialogClose = () => {
     setEditOpen(false);
   };
@@ -116,13 +119,23 @@ export const EventDropdown = ({ eventData }: { eventData: Event }) => {
               <DialogFooter>
                 <Button
                   variant="destructive"
-                  onClick={() => {
-                    deleteFromFirebase(eventData.id);
-                    handleDeleteDialogClose();
-                    handleDropdownClose();
+                  onClick={async () => {
+                    try {
+                      setIsDeleting(true);
+                      await deleteFromFirebase(eventData.id);
+                      await refreshData();
+                      handleDeleteDialogClose();
+                      handleDropdownClose();
+                    } catch (error) {
+                      console.error("Error deleting event:", error);
+                      // Optionally show error message to user
+                    } finally {
+                      setIsDeleting(false);
+                    }
                   }}
+                  disabled={isDeleting}
                 >
-                  Delete
+                  {isDeleting ? "Deleting..." : "Delete"}
                 </Button>
               </DialogFooter>
             </DialogContent>

@@ -74,9 +74,11 @@ export type FilePayload = {
 export const sendDocumentToFirestore = async (payload: FormType) => {
   try {
     console.log("Payload received in sendDocumentToFirestore:", payload);
+    console.log("Guest list file before parsing:", payload.guestList);
 
     // 1. Parse guest list from CSV
     const parsedGuestList: Guest[] = await parseCSV(payload.guestList); // Convert .csv file to JSON format
+    console.log("Successfully parsed guest list:", parsedGuestList);
     // 2. Create event document first (without guest list)
     const eventDocRef = await addDoc(collection(db, "events"), {
       eventName: payload.eventName || "",

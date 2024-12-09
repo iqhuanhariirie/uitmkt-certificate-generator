@@ -1,6 +1,7 @@
 import { DataTable } from "@/components/DataTableEvent";
 import { columns } from "@/components/ui/columns";
 
+
 const Page = () => {
   return (
     <>

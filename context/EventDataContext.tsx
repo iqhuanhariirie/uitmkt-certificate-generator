@@ -39,8 +39,14 @@ export const EventDataContextProvider = ({ children }: { children: React.ReactNo
     }
   };
 
+  const refreshEvents = async () => {
+    setLoading(true);
+    await fetchEventData();
+    setLoading(false);
+  };
+
   useEffect(() => {
-    fetchEventData();
+    refreshEvents();
   }, []);
 
   const refreshData = async () => {

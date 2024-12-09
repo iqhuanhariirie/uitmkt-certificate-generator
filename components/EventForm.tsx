@@ -29,6 +29,7 @@ import * as z from "zod";
 import { ButtonRingLoader } from "./RingLoader";
 import CertificatePreview from "./CertificatePreview";
 import { useState } from "react";
+import { useEventData } from "@/context/EventDataContext";
 
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png"];
 const ACCEPTED_GUEST_LIST_TYPES = ["text/csv"];
@@ -146,7 +147,7 @@ export const EventForm = ({
   id,
 }: EventFormProps) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
+  const { refreshData } = useEventData();
   const currentResolver = id ? editingFormSchema : addingFormSchema;
   const form = useForm<FormType>({
     resolver: zodResolver(currentResolver),
@@ -155,29 +156,45 @@ export const EventForm = ({
       eventName: currentEventName || "",
       description: currentEventDescription || "",
       eventDate: currentEventDate || undefined,
+      namePosition: {  // Add this
+        top: 50,
+        left: 50,
+        fontSize: 24
+      }
     },
   });
 
   const { formState } = form;
 
   const onSubmit = async (payload: FormType) => {
-    console.log("Payload before sending to Firestore:", payload);
-
-    if (id) {
-      await editDocumentInFirestore({ payload, id });
-    } else {
-      await sendDocumentToFirestore(payload);
-    }
-    handleDialogClose();
-    if (handleDropdownClose !== undefined) {
-      handleDropdownClose();
-    }
+   try {
+     console.log("Payload before sending to Firestore:", payload);
+     console.log("Guest list file:", payload.guestList);
+ 
+     if (id) {
+       await editDocumentInFirestore({ payload, id });
+     } else {
+       await sendDocumentToFirestore(payload);
+     }
+     await refreshData();
+     handleDialogClose();
+     if (handleDropdownClose !== undefined) {
+       handleDropdownClose();
+     }
+   } catch (error) {
+      console.error("Error submitting form:", error);
+    
+   }
   };
-
+  
   const handleGuestList = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
+    if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
-      form.setValue("guestList", file);
+      console.log("Setting guest list file:", file);
+      form.setValue("guestList", file, { 
+        shouldValidate: true,
+        shouldDirty: true 
+      });
       form.trigger("guestList");
     }
   };
@@ -203,6 +220,7 @@ export const EventForm = ({
 
   const handlePositionChange = (position: { top: number; left: number; fontSize: number }) => {
     form.setValue("namePosition", position);
+    form.trigger("namePosition");
   };
 
   return (
@@ -325,7 +343,7 @@ export const EventForm = ({
                   <FormControl>
                     <CertificatePreview
                       templateUrl={previewUrl}
-                      sampleName="John Doe"
+                      sampleName="This is a name placement"
                       onPositionChange={handlePositionChange}
                     />
                   </FormControl>
