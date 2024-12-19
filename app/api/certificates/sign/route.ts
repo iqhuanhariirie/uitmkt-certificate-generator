@@ -24,8 +24,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Convert base64 back to Buffer
-    const pdfBuffer = Buffer.from(pdfBase64, 'base64');
+    // Convert base64 to Uint8Array
+    const pdfBuffer = new Uint8Array(Buffer.from(pdfBase64, 'base64'));
 
     // 1. Create PDF with placeholder
     const pdfDoc = await PDFDocument.load(pdfBuffer);
