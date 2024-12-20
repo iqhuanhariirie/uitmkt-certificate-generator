@@ -6,13 +6,16 @@ import { uploadPhoto } from "@/utils/uploadToStorage";
 import {
   Timestamp,
   addDoc,
+  arrayUnion,
   collection,
   doc,
   getDoc,
   getDocs,
   query,
+  serverTimestamp,
   updateDoc,
   where,
+  writeBatch,
 } from "firebase/firestore";
 
 export type SignatureInfo = {
@@ -47,6 +50,11 @@ const DEFAULT_SIGNATURE_INFO: SignatureInfo = {
   name: 'UITM KT CDCS230',
   location: 'Kuala Terengganu'
 };
+type NamePosition = {
+  top: number;
+  left: number;
+  fontSize: number;
+};
 
 export type Guest = {
   email: string;
@@ -69,6 +77,13 @@ export type InitialPayload = {
 export type FilePayload = {
   eventBanner?: string;
   certificateTemplate?: string;
+};
+
+export type UpdateEventPayload = {
+  eventName: string;
+  description: string;
+  eventDate: Timestamp;
+  namePosition?: NamePosition; // Optional for updates
 };
 
 export const sendDocumentToFirestore = async (payload: FormType) => {
@@ -148,6 +163,56 @@ export const sendDocumentToFirestore = async (payload: FormType) => {
   }
 };
 
+export const addParticipantsToEvent = async (eventId: string, guestList: Guest[]) => {
+  try {
+    // Get event document to get certificate template
+    const eventDoc = await getDoc(doc(db, "events", eventId));
+    if (!eventDoc.exists()) {
+      throw new Error("Event not found");
+    }
+    
+    const certificateTemplateURL = eventDoc.data().certificateTemplate;
+
+    // Create certificate documents for each guest
+    const certificatePromises = guestList.map(async (guest) => {
+      const certRef = await addDoc(collection(db, 'certificates'), {
+        eventId,
+        guestName: guest.name,
+        studentID: guest.studentID,
+        email: guest.email,
+        course: guest.course,
+        part: guest.part,
+        group: guest.group,
+        certId: guest.certId,
+        status: 'pending',
+        createdAt: Timestamp.now(),
+        certificateTemplate: certificateTemplateURL,
+        signedPdfUrl: null,
+        signedAt: null,
+        signatureInfo: DEFAULT_SIGNATURE_INFO,
+        errorMessage: null
+      } as Certificate);
+
+      return {
+        ...guest,
+        certificateId: certRef.id
+      };
+    });
+
+    const newParticipants = await Promise.all(certificatePromises);
+
+    // Update event's guestList
+    const eventRef = doc(db, "events", eventId);
+    await updateDoc(eventRef, {
+      guestList: arrayUnion(...newParticipants)
+    });
+
+    return newParticipants;
+  } catch (error) {
+    console.error("Error adding participants:", error);
+    throw error;
+  }
+};
 export const editDocumentInFirestore = async ({
   payload,
   id,
@@ -158,53 +223,19 @@ export const editDocumentInFirestore = async ({
   try {
     const eventDocRef = doc(db, "events", id);
 
-    // 1. Handle non-file updates
-    const initialPayload: InitialPayload = {
+    // Handle basic updates
+    const updatePayload: UpdateEventPayload = {
       eventName: payload.eventName,
       description: payload.description,
       eventDate: Timestamp.fromDate(payload.eventDate),
     };
 
-    // 2. Handle guest list if provided
-    if (payload.guestList) {
-      const parsedGuestList: Guest[] = await parseCSV(payload.guestList);
-
-      const eventDoc = await getDoc(eventDocRef);
-      const certificateTemplateURL = eventDoc.data()?.certificateTemplate || '';
-
-      // Create new certificate documents
-      const certificatePromises = parsedGuestList.map(async (guest) => {
-        const certRef = await addDoc(collection(db, 'certificates'), {
-          eventId: id,
-          guestName: guest.name,
-          studentID: guest.studentID,
-          email: guest.email,
-          course: guest.course,
-          part: guest.part,
-          group: guest.group,
-          certId: guest.certId,
-          status: 'pending',
-          createdAt: Timestamp.now(),
-          certificateTemplate: certificateTemplateURL, // Add this
-          signedPdfUrl: null,
-          signedAt: null,
-          signatureInfo: DEFAULT_SIGNATURE_INFO,
-          errorMessage: null
-        } as Certificate);
-
-
-        return {
-          ...guest,
-          certificateId: certRef.id
-        };
-      });
-
-      const updatedGuestList = await Promise.all(certificatePromises);
-      initialPayload.guestList = updatedGuestList;
+    if (payload.namePosition) {
+      updatePayload.namePosition = payload.namePosition;
     }
 
     // 3. Update event document with initial payload
-    await updateDoc(eventDocRef, initialPayload);
+    await updateDoc(eventDocRef, updatePayload);
 
     // 4. Handle file updates if provided
     if (payload.eventBanner) {
@@ -214,31 +245,41 @@ export const editDocumentInFirestore = async ({
     }
 
     if (payload.certificateTemplate) {
-      const certificateTemplateURL = await uploadPhoto(
-        id,
-        payload.certificateTemplate,
-        "cert"
+      // Check for signed certificates
+      const signedCertsQuery = query(
+        collection(db, 'certificates'),
+        where('eventId', '==', id),
+        where('status', '==', 'signed')
       );
-      await updateDoc(eventDocRef, { certificateTemplate: certificateTemplateURL });
+      const signedCertsSnapshot = await getDocs(signedCertsQuery);
+      const hasSignedCertificates = !signedCertsSnapshot.empty;
 
-      // Update template URL in all pending certificates
-      const certificatesQuery = query(
+      const certificateTemplateURL = await uploadPhoto(id, payload.certificateTemplate, "cert");
+
+      // Update event document
+      await updateDoc(eventDocRef, { 
+        certificateTemplate: certificateTemplateURL,
+        lastTemplateUpdate: serverTimestamp()
+      });
+
+      // Only update pending certificates
+      const pendingCertsQuery = query(
         collection(db, 'certificates'),
         where('eventId', '==', id),
         where('status', '==', 'pending')
       );
-      const certificatesSnapshot = await getDocs(certificatesQuery);
+      const pendingCertsSnapshot = await getDocs(pendingCertsQuery);
 
-      const templateUpdatePromises = certificatesSnapshot.docs.map(doc =>
-        updateDoc(doc.ref, { certificateTemplate: certificateTemplateURL })
-      );
-
-      await Promise.all(templateUpdatePromises);
+      const batch = writeBatch(db);
+      pendingCertsSnapshot.docs.forEach(doc => {
+        batch.update(doc.ref, { certificateTemplate: certificateTemplateURL });
+      });
+      await batch.commit();
     }
 
     console.log("Event successfully edited in Firebase!");
-  } catch (error: any) {
-    console.error("Editing event error occurred", error.message);
+  } catch (error) {
+    console.error("Editing event error occurred:", error);
     throw error;
   }
 };

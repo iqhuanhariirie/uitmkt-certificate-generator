@@ -103,13 +103,6 @@ const editingFormSchema = z.object({
   eventDate: z.date({
     required_error: "An event date is required.",
   }),
-  guestList: z
-    .any()
-    .refine(
-      (file) => ACCEPTED_GUEST_LIST_TYPES.includes(file?.type),
-      "Only .csv file types are supported."
-    )
-    .optional(),
   eventBanner: z
     .any()
     .refine(
@@ -124,6 +117,11 @@ const editingFormSchema = z.object({
       "Only .jpeg, .jpg, and .png file types are supported."
     )
     .optional(),
+    namePosition: z.object({
+      top: z.number().min(0).max(100),
+      left: z.number().min(0).max(100),
+      fontSize: z.number().min(8).max(72),
+    }).optional()
 });
 
 export type FormType = z.infer<typeof addingFormSchema>;
@@ -308,19 +306,22 @@ export const EventForm = ({
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="guestList"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Participant List</FormLabel>
-                <FormControl>
-                  <Input type="file" onChange={handleGuestList} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* Only show guest list field if it's NOT an edit form */}
+          {!id && (
+            <FormField
+              control={form.control}
+              name="guestList"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Participant List</FormLabel>
+                  <FormControl>
+                    <Input type="file" onChange={handleGuestList} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
           <FormField
             control={form.control}
             name="certificateTemplate"

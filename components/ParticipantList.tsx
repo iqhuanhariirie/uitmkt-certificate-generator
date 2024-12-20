@@ -11,7 +11,8 @@ import toast from "react-hot-toast";
 import { Users, Download } from "lucide-react";
 import { signCertificate } from "@/utils/signCertificate";
 import { generateCertificatePDF } from "@/utils/generateCertificatePDF";
-import { useAuth } from "@/context/AuthContext"; // Add this import
+import { useAuth } from "@/context/AuthContext";
+import { AddParticipants } from "@/components/AddParticipant";
 
 export function ParticipantList({ eventId }: { eventId: string }) {
   const { user, checkIfUserIsAdmin } = useAuth(); // Add this line
@@ -186,6 +187,10 @@ export function ParticipantList({ eventId }: { eventId: string }) {
           <h1 className="text-2xl font-bold">Event Participants</h1>
         </div>
         <div className="flex items-center space-x-2">
+        <AddParticipants 
+            eventId={eventId} 
+            onParticipantsAdded={fetchParticipants}
+          />
           <Button
             variant="outline"
             onClick={downloadParticipantsList}
