@@ -228,6 +228,7 @@ export function ParticipantList({ eventId }: { eventId: string }) {
         <DataTable
           columns={participantColumns}
           data={filteredParticipants}
+          onRefresh={fetchParticipants}
         />
       )}
 

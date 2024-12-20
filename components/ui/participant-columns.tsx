@@ -1,6 +1,6 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
+import { CellContext, ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { MoreHorizontal } from "lucide-react";
@@ -16,6 +16,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { generateCertificatePDF } from "@/utils/generateCertificatePDF";
+import { useState } from "react";
 
 export type Participant = {
     id: string;
@@ -33,12 +34,16 @@ export type Participant = {
     errorMessage?: string;
     eventDate: Timestamp;
     certificateTemplate: string;
-    namePosition: { 
+    namePosition: {
         top: number;
         left: number;
         fontSize: number;
-      };
+    };
 };
+
+interface ActionsCellProps extends CellContext<Participant, any> {
+    onRefresh?: () => Promise<void>;
+}
 
 export const participantColumns: ColumnDef<Participant>[] = [
     {
@@ -75,7 +80,8 @@ export const participantColumns: ColumnDef<Participant>[] = [
         accessorKey: "status",
         header: () => <div className="text-center">Status</div>,
         cell: ({ row }) => {
-            const status = row.getValue("status") as string;
+            const participant = row.original;
+            const [status, setStatus] = useState(participant.status);
             return (
                 <div className={`
           px-2 py-1 rounded-full text-xs font-medium text-center
@@ -90,8 +96,11 @@ export const participantColumns: ColumnDef<Participant>[] = [
     },
     {
         id: "actions",
-        cell: ({ row }) => {
+        cell: function ActionCell(props: ActionsCellProps) {
+            const { row, onRefresh } = props;
             const participant = row.original;
+            const [status, setStatus] = useState(participant.status);
+            const [signedUrl, setSignedUrl] = useState(participant.signedPdfUrl);
 
             const handleSign = async () => {
                 const toastId = toast.loading('Signing certificate...');
@@ -101,22 +110,32 @@ export const participantColumns: ColumnDef<Participant>[] = [
                     if (!pdfBytes) {
                         throw new Error('Failed to generate PDF');
                     }
-            
+
                     const result = await signCertificate(participant, pdfBytes);
                     if (!result.success) {
                         throw new Error(result.error || 'Failed to sign certificate');
                     }
-            
+                    // Update local state
+                    setStatus('signed');
+                    if (result.url) {
+                        setSignedUrl(result.url);
+                    }
+                    // Refresh the data after successful signing
+                if (onRefresh) {
+                    await onRefresh();
+                }
+
                     toast.success('Certificate signed successfully', { id: toastId });
-            
+
                     // Optional: Open signed certificate in new tab
                     if (result.url) {
                         window.open(result.url, '_blank');
                     }
                 } catch (error) {
+                    setStatus('error');
                     console.error('Error signing certificate:', error);
                     toast.error(
-                        error instanceof Error ? error.message : 'Failed to sign certificate', 
+                        error instanceof Error ? error.message : 'Failed to sign certificate',
                         { id: toastId }
                     );
                 }
@@ -132,7 +151,7 @@ export const participantColumns: ColumnDef<Participant>[] = [
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        {participant.status === 'pending' ? (
+                        {status === 'pending' ? (
                             <DropdownMenuItem onClick={handleSign}>
                                 Sign Certificate
                             </DropdownMenuItem>
@@ -146,10 +165,10 @@ export const participantColumns: ColumnDef<Participant>[] = [
                                 </Link>
                             </DropdownMenuItem>
                         )}
-                        {participant.status === 'signed' && participant.signedPdfUrl && (
+                        {status === 'signed' && signedUrl && (
                             <DropdownMenuItem>
                                 <a
-                                    href={participant.signedPdfUrl}
+                                    href={signedUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="cursor-pointer"
@@ -158,7 +177,7 @@ export const participantColumns: ColumnDef<Participant>[] = [
                                 </a>
                             </DropdownMenuItem>
                         )}
-                        {participant.status === 'error' && (
+                        {status === 'error' && (
                             <DropdownMenuItem className="text-red-600">
                                 Error: {participant.errorMessage || 'Unknown error'}
                             </DropdownMenuItem>

@@ -10,6 +10,8 @@ import {
     getPaginationRowModel,
     getSortedRowModel,
     useReactTable,
+    Row,
+    CellContext
 } from "@tanstack/react-table";
 
 import {
@@ -23,6 +25,15 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+
+interface CellProps<TData> {
+    row: Row<TData>;
+    onRefresh?: () => Promise<void>;
+  }
+
+  type CustomCellContext<TData, TValue> = CellContext<TData, TValue> & {
+    onRefresh?: () => Promise<void>;
+};
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
@@ -38,9 +49,26 @@ export function DataTable<TData, TValue>({
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
+    // Modify columns to include onRefresh
+    const columnsWithRefresh = columns.map(col => {
+        if (col.id === 'actions') {
+            return {
+                ...col,
+                cell: (props: CellContext<TData, TValue>) => {
+                    const customProps: CustomCellContext<TData, TValue> = {
+                        ...props,
+                        onRefresh
+                    };
+                    return (col.cell as (props: CustomCellContext<TData, TValue>) => React.ReactNode)(customProps);
+                }
+            };
+        }
+        return col;
+    });
+
     const table = useReactTable({
         data,
-        columns,
+        columns: columnsWithRefresh,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         onSortingChange: setSorting,
