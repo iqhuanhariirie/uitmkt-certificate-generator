@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as Slider from '@radix-ui/react-slider';
 
 interface CertificatePreviewProps {
@@ -17,7 +17,27 @@ const CertificatePreview = ({ templateUrl, sampleName, onPositionChange }: Certi
     setPosition(newPosition);
     onPositionChange(newPosition);
   };
+
+  // PDF dimensions in points (1 point = 1/72 inch)
+  const PDF_WIDTH = 842; // A4 landscape width in points
+  const PDF_HEIGHT = 595; // A4 landscape height in points
+
+  // Calculate scaling factor based on container width
   const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const updateScale = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.offsetWidth;
+        setScale(containerWidth / PDF_WIDTH);
+      }
+    };
+
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -25,11 +45,7 @@ const CertificatePreview = ({ templateUrl, sampleName, onPositionChange }: Certi
         ref={containerRef}
         className="relative w-full h-[400px] border rounded-lg overflow-hidden"
       >
-        <div className="absolute inset-0 grid grid-cols-10 grid-rows-10 pointer-events-none opacity-10">
-          {Array.from({ length: 100 }).map((_, i) => (
-            <div key={i} className="border border-black" />
-          ))}
-        </div>
+        
         {templateUrl && (
           <>
             <img
@@ -43,14 +59,14 @@ const CertificatePreview = ({ templateUrl, sampleName, onPositionChange }: Certi
                 top: `${position.top}%`,
                 left: `${position.left}%`,
                 transform: 'translate(-50%, -50%)',
-                fontSize: `${position.fontSize}px`,
+                fontSize: `${position.fontSize * scale}px`,
                 fontWeight: 'bold',
               }}
               className="font-bold text-black"
             >
               {sampleName}
               <div className="text-xs text-red-500">
-                {`${Math.round(position.left)}%, ${Math.round(position.top)}%`}
+              {/* {`PDF size: ${position.fontSize}px`} */}
               </div>
             </div>
           </>
@@ -99,7 +115,7 @@ const CertificatePreview = ({ templateUrl, sampleName, onPositionChange }: Certi
         </div>
 
         <div>
-          <label className="text-sm font-medium mb-2 block">Font Size ({position.fontSize}px)</label>
+          <label className="text-sm font-medium mb-2 block">Font Size ({position.fontSize}px) - Preview scaled by {scale.toFixed(2)}x</label>
           <Slider.Root
             className="relative flex items-center select-none touch-none w-full h-5"
             value={[position.fontSize]}
