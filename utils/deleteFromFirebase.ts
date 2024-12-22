@@ -122,3 +122,78 @@ export const deleteCertificate = async (certificateId: string) => {
     throw error;
   }
 };
+
+// utils/deleteFromFirebase.ts
+export const deleteCertificates = async (certificateIds: string[]) => {
+  try {
+    // Create a batch
+    const batch = writeBatch(db);
+    
+    // Group certificates by eventId
+    const certificatesByEvent: { [eventId: string]: any[] } = {};
+    
+    // First, gather all certificate data
+    for (const certificateId of certificateIds) {
+      const certificateRef = doc(db, "certificates", certificateId);
+      const certificateSnap = await getDoc(certificateRef);
+      
+      if (!certificateSnap.exists()) continue;
+
+      const certificateData = certificateSnap.data();
+      const eventId = certificateData.eventId;
+
+      if (!certificatesByEvent[eventId]) {
+        certificatesByEvent[eventId] = [];
+      }
+      certificatesByEvent[eventId].push({
+        certificateId,
+        certificateData
+      });
+    }
+
+    // Process each event's certificates
+    for (const [eventId, certificates] of Object.entries(certificatesByEvent)) {
+      const eventRef = doc(db, "events", eventId);
+      const eventSnap = await getDoc(eventRef);
+      
+      if (!eventSnap.exists()) continue;
+
+      const eventData = eventSnap.data();
+      const studentIdsToRemove = certificates.map(c => c.certificateData.studentID);
+      
+      // Filter out all guests that match any of the certificates being deleted
+      const updatedGuestList = eventData.guestList.filter(
+        (guest: any) => !studentIdsToRemove.includes(guest.studentID)
+      );
+
+      // Update event document once per event
+      batch.update(eventRef, {
+        guestList: updatedGuestList,
+        totalParticipants: updatedGuestList.length
+      });
+
+      // Delete certificate documents and their PDFs
+      for (const certificate of certificates) {
+        if (certificate.certificateData.status === 'signed') {
+          const pdfRef = ref(storage, `certificates/${certificate.certificateId}.pdf`);
+          try {
+            await deleteObject(pdfRef);
+          } catch (error: any) {
+            console.log(`Error deleting signed PDF:`, error.message);
+          }
+        }
+
+        // Delete certificate document
+        batch.delete(doc(db, "certificates", certificate.certificateId));
+      }
+    }
+
+    // Commit the batch
+    await batch.commit();
+
+    console.log(`${certificateIds.length} certificates deleted successfully`);
+  } catch (error: any) {
+    console.error("Error deleting certificates:", error.message);
+    throw error;
+  }
+};

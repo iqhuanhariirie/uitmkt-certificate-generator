@@ -11,7 +11,8 @@ import {
     getSortedRowModel,
     useReactTable,
     Row,
-    CellContext
+    CellContext,
+    RowSelectionState
 } from "@tanstack/react-table";
 
 import {
@@ -25,6 +26,8 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { BulkActions } from '@/components/BulkActions';
+import { Participant } from "./ui/participant-columns";
 
 interface CellProps<TData> {
     row: Row<TData>;
@@ -35,9 +38,9 @@ interface CellProps<TData> {
     onRefresh?: () => Promise<void>;
 };
 
-interface DataTableProps<TData, TValue> {
-    columns: ColumnDef<TData, TValue>[];
-    data: TData[];
+interface DataTableProps {
+    columns: ColumnDef<Participant, any>[];
+    data: Participant[];
     onRefresh?: () => Promise<void>;
 }
 
@@ -45,22 +48,22 @@ export function DataTable<TData, TValue>({
     columns,
     data,
     onRefresh
-}: DataTableProps<TData, TValue>) {
+}: DataTableProps) {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+    const [rowSelection, setRowSelection] = useState<RowSelectionState>({}); 
 
     // Modify columns to include onRefresh
     const columnsWithRefresh = columns.map(col => {
         if (col.id === 'actions') {
             return {
                 ...col,
-                cell: (props: CellContext<TData, TValue>) => {
-                    const customProps: CustomCellContext<TData, TValue> = {
+                cell: (props: CellContext<Participant, any>) => {
+                    const customProps= {
                         ...props,
                         onRefresh
                     };
-                    return (col.cell as (props: CustomCellContext<TData, TValue>) => React.ReactNode)(customProps);
-                }
+                    return (col.cell as any)(customProps);                }
             };
         }
         return col;
@@ -75,14 +78,20 @@ export function DataTable<TData, TValue>({
         getSortedRowModel: getSortedRowModel(),
         onColumnFiltersChange: setColumnFilters,
         getFilteredRowModel: getFilteredRowModel(),
+        onRowSelectionChange: setRowSelection,
+        enableRowSelection: true,
         state: {
             sorting,
             columnFilters,
+            rowSelection
         },
     });
 
     return (
         <div>
+            <div className="flex items-center justify-between py-4">
+                <BulkActions table={table} onRefresh={onRefresh} />
+            </div>
             <div className="rounded-md border">
                 <Table>
                     <TableHeader>
