@@ -3,11 +3,20 @@
 import { CellContext, ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Trash2 } from "lucide-react";
 import { Timestamp } from "firebase/firestore";
 import { signCertificate } from "@/utils/signCertificate";
 import toast from "react-hot-toast";
+import { deleteCertificate } from "@/utils/deleteFromFirebase";
 import Certificate from '@/components/Certificate';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -101,6 +110,7 @@ export const participantColumns: ColumnDef<Participant>[] = [
             const participant = row.original;
             const [status, setStatus] = useState(participant.status);
             const [signedUrl, setSignedUrl] = useState(participant.signedPdfUrl);
+            const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
             const handleSign = async () => {
                 const toastId = toast.loading('Signing certificate...');
@@ -121,9 +131,9 @@ export const participantColumns: ColumnDef<Participant>[] = [
                         setSignedUrl(result.url);
                     }
                     // Refresh the data after successful signing
-                if (onRefresh) {
-                    await onRefresh();
-                }
+                    if (onRefresh) {
+                        await onRefresh();
+                    }
 
                     toast.success('Certificate signed successfully', { id: toastId });
 
@@ -140,50 +150,101 @@ export const participantColumns: ColumnDef<Participant>[] = [
                     );
                 }
             };
+            const handleDelete = async () => {
+                const toastId = toast.loading('Deleting certificate...');
+                try {
+                    await deleteCertificate(participant.id);
+                    if (onRefresh) {
+                        await onRefresh();
+                    }
+                    toast.success('Certificate deleted successfully', { id: toastId });
+                    setShowDeleteDialog(false);
+                } catch (error) {
+                    console.error('Error deleting certificate:', error);
+                    toast.error('Failed to delete certificate', { id: toastId });
+                }
+            };
 
             return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        {status === 'pending' ? (
-                            <DropdownMenuItem onClick={handleSign}>
-                                Sign Certificate
+                <>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            {status === 'pending' ? (
+                                <DropdownMenuItem onClick={handleSign}>
+                                    Sign Certificate
+                                </DropdownMenuItem>
+                            ) : (
+                                <DropdownMenuItem asChild>
+                                    <Link
+                                        href={`/event/${participant.eventId}/certificate/${participant.id}`}
+                                        className="cursor-pointer w-full"
+                                    >
+                                        View Certificate
+                                    </Link>
+                                </DropdownMenuItem>
+                            )}
+                            {status === 'signed' && signedUrl && (
+                                <DropdownMenuItem>
+                                    <a
+                                        href={signedUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="cursor-pointer"
+                                    >
+                                        Download Certificate
+                                    </a>
+                                </DropdownMenuItem>
+                            )}
+                            {status === 'error' && (
+                                <DropdownMenuItem className="text-red-600">
+                                    Error: {participant.errorMessage || 'Unknown error'}
+                                </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                                className="text-red-600 focus:text-red-600 cursor-pointer"
+                                onSelect={(e) => {
+                                    e.preventDefault();
+                                    setShowDeleteDialog(true);
+                                }}
+                            >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete Certificate
                             </DropdownMenuItem>
-                        ) : (
-                            <DropdownMenuItem asChild>
-                                <Link
-                                    href={`/event/${participant.eventId}/certificate/${participant.id}`}
-                                    className="cursor-pointer w-full"
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Delete Certificate</DialogTitle>
+                                <DialogDescription>
+                                    Are you sure you want to delete the certificate for {participant.guestName}?
+                                    This action cannot be undone.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <DialogFooter>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setShowDeleteDialog(false)}
                                 >
-                                    View Certificate
-                                </Link>
-                            </DropdownMenuItem>
-                        )}
-                        {status === 'signed' && signedUrl && (
-                            <DropdownMenuItem>
-                                <a
-                                    href={signedUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="cursor-pointer"
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    onClick={handleDelete}
                                 >
-                                    Download Certificate
-                                </a>
-                            </DropdownMenuItem>
-                        )}
-                        {status === 'error' && (
-                            <DropdownMenuItem className="text-red-600">
-                                Error: {participant.errorMessage || 'Unknown error'}
-                            </DropdownMenuItem>
-                        )}
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                                    Delete
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                </>
             );
         },
     },
