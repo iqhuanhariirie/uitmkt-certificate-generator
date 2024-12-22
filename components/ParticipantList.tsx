@@ -9,7 +9,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import toast from "react-hot-toast";
 import { Users, Download } from "lucide-react";
-import { signCertificate } from "@/utils/signCertificate";
+import { batchSignCertificates, signCertificate } from "@/utils/signCertificate";
 import { generateCertificatePDF } from "@/utils/generateCertificatePDF";
 import { useAuth } from "@/context/AuthContext";
 import { AddParticipants } from "@/components/AddParticipant";
@@ -102,75 +102,37 @@ export function ParticipantList({ eventId }: { eventId: string }) {
     }
   };
 
-  const batchSignCertificates = async () => {
-    // Add auth check at the start of the function
+  const handleBatchSign = async () => {
     if (!user || !checkIfUserIsAdmin(user)) {
       toast.error("You must be an admin to sign certificates");
       return;
     }
-
+  
     const pendingCertificates = participants.filter(p => p.status === 'pending');
-    const batchSize = 5;
-
     const toastId = toast.loading(
       `Preparing to sign ${pendingCertificates.length} certificates...`
     );
-
+  
     try {
       const idToken = await user.getIdToken();
-      console.log("Got ID token:", idToken.substring(0, 10) + "...");
-      const certificateBatches = [];
-      for (let i = 0; i < pendingCertificates.length; i += batchSize) {
-        const batch = pendingCertificates.slice(i, i + batchSize);
-
-        // Generate PDFs for the batch
-        const batchData = await Promise.all(
-          batch.map(async (cert) => ({
-            certificateId: cert.id,
-            pdfBytes: Array.from(await generateCertificatePDF(cert))
-          }))
-        );
-
-        certificateBatches.push(batchData);
-      }
-
-      let totalSuccess = 0;
-      let totalFailed = 0;
-
-      // Process each batch
-      for (let i = 0; i < certificateBatches.length; i++) {
-        const batch = certificateBatches[i];
-
-        toast.loading(
-          `Processing batch ${i + 1}/${certificateBatches.length}...`,
-          { id: toastId }
-        );
-
-        const response = await fetch('/api/certificates/batch-sign', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${idToken}`
-          },
-          body: JSON.stringify({ certificates: batch })
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error("Server response:", errorData); // Log server error
-          throw new Error(errorData.error || 'Failed to process batch');
+      
+      const result = await batchSignCertificates(
+        pendingCertificates,
+        idToken,
+        generateCertificatePDF,
+        (current, total) => {
+          toast.loading(
+            `Processing batch ${current}/${total}...`,
+            { id: toastId }
+          );
         }
-
-        const result = await response.json();
-        totalSuccess += result.success;
-        totalFailed += result.failed;
-      }
-
+      );
+  
       toast.success(
-        `Signed ${totalSuccess} certificates. Failed: ${totalFailed}`,
+        `Signed ${result.totalSuccess} certificates. Failed: ${result.totalFailed}`,
         { id: toastId }
       );
-
+  
       // Refresh the participants list
       await fetchParticipants();
     } catch (error) {
@@ -201,7 +163,7 @@ export function ParticipantList({ eventId }: { eventId: string }) {
           </Button>
           <Button
             variant="default"
-            onClick={batchSignCertificates}
+            onClick={handleBatchSign}
             disabled={
               !filteredParticipants.some(p => p.status === 'pending') ||
               !user ||

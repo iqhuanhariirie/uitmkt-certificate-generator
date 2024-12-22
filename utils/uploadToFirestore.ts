@@ -173,8 +173,29 @@ export const addParticipantsToEvent = async (eventId: string, guestList: Guest[]
     
     const certificateTemplateURL = eventDoc.data().certificateTemplate;
 
-    // Create certificate documents for each guest
-    const certificatePromises = guestList.map(async (guest) => {
+    // Check for existing participants
+    const existingParticipantsQuery = query(
+      collection(db, "certificates"),
+      where("eventId", "==", eventId)
+    );
+    const existingParticipantsSnapshot = await getDocs(existingParticipantsQuery);
+    const existingParticipants = new Set(
+      existingParticipantsSnapshot.docs.map(doc => 
+        doc.data().studentID.toLowerCase()
+      )
+    );
+
+    // Filter out duplicates
+    const newGuests = guestList.filter(guest => 
+      !existingParticipants.has(guest.studentID.toLowerCase())
+    );
+    
+    const duplicates = guestList.filter(guest => 
+      existingParticipants.has(guest.studentID.toLowerCase())
+    );
+
+    // Create certificate documents only for new guests
+    const certificatePromises = newGuests.map(async (guest) => {
       const certRef = await addDoc(collection(db, 'certificates'), {
         eventId,
         guestName: guest.name,
@@ -201,13 +222,21 @@ export const addParticipantsToEvent = async (eventId: string, guestList: Guest[]
 
     const newParticipants = await Promise.all(certificatePromises);
 
-    // Update event's guestList
-    const eventRef = doc(db, "events", eventId);
-    await updateDoc(eventRef, {
-      guestList: arrayUnion(...newParticipants)
-    });
+    // Only update event's guestList with new participants
+    if (newParticipants.length > 0) {
+      const eventRef = doc(db, "events", eventId);
+      await updateDoc(eventRef, {
+        guestList: arrayUnion(...newParticipants)
+      });
+    }
 
-    return newParticipants;
+    // Return summary of the operation
+    return {
+      added: newParticipants.length,
+      duplicates: duplicates.length,
+      duplicatesList: duplicates,
+      newParticipants
+    };
   } catch (error) {
     console.error("Error adding participants:", error);
     throw error;
