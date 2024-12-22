@@ -55,6 +55,11 @@ interface ActionsCellProps extends CellContext<Participant, any> {
     onRefresh?: () => Promise<void>;
 }
 
+// Add a new type for selected items
+export type SelectedCertificates = {
+    [key: string]: boolean;
+  };
+
 export const participantColumns: ColumnDef<Participant>[] = [
     {
         id: "select",
