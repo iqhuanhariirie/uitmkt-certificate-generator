@@ -4,6 +4,8 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Timestamp } from "firebase/firestore";
 import { EventDropdown } from "@/components/EventDropdown";
 import { ClubDropdown } from "@/components/ClubDropdown";
+import { ImageIcon } from "lucide-react";
+import Image from "next/image";
 
 export type Event = {
   id: string;
@@ -11,6 +13,7 @@ export type Event = {
   date: Timestamp;
   description: string;
   guests: number;
+  eventBanner: string;
 };
 
 export type Club = {
@@ -33,10 +36,16 @@ export const columns: ColumnDef<Event>[] = [
   {
     accessorKey: "name",
     header: "Name",
+    cell: ({ row }) => {
+      return <div className="text-center">{row.getValue("name")}</div>;
+    }
   },
   {
     accessorKey: "description",
     header: "Description",
+    cell: ({ row }) => {
+      return <div className="text-center">{row.getValue("description")}</div>;
+    }
   },
   {
     accessorKey: "guests",
@@ -50,10 +59,39 @@ export const columns: ColumnDef<Event>[] = [
     },
   },
   {
+    id: "banner",
+    header: "",
+    cell: ({ row }) => {
+      const event = row.original;
+      console.log("Event banner URL:", event.eventBanner);
+      return (
+        <div className="relative h-14 w-36 rounded-md overflow-hidden mx-auto">
+          {event.eventBanner ? (
+            <Image
+              src={event.eventBanner}
+              alt={event.name}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+          ) : (
+            <div className="h-full w-full bg-gray-100 flex items-center justify-center">
+              <ImageIcon className="h-6 w-6 text-gray-400" />
+            </div>
+          )}
+        </div>
+      );
+    },
+  },
+  {
     id: "actions",
     cell: ({ row }) => {
       const event = row.original;
-      return <EventDropdown eventData={event} />;
+      return (
+        <div className="flex justify-center"> {/* Center the actions dropdown */}
+          <EventDropdown eventData={event} />
+        </div>
+      );
     },
   },
 ];

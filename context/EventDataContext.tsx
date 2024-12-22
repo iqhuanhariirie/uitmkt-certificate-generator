@@ -29,6 +29,7 @@ export const EventDataContextProvider = ({ children }: { children: React.ReactNo
         date: doc.data().eventDate,
         description: doc.data().description,
         guests: doc.data().guestList?.length || 0,
+        eventBanner: doc.data().eventBanner,
       })) as Event[];
       console.log("Processed event data:", data); 
       setEventData(data);

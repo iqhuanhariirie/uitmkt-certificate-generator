@@ -4,7 +4,8 @@ const nextConfig = {
     mdxRs: true,
   },
   images: {
-    domains: ["github.com"],
+    domains: ["github.com", "firebasestorage.googleapis.com"],
+    
   },
   async headers() {
     return [
