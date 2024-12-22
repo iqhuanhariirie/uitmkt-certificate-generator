@@ -8,6 +8,7 @@ import { Timestamp } from "firebase/firestore";
 import { signCertificate } from "@/utils/signCertificate";
 import toast from "react-hot-toast";
 import { deleteCertificate } from "@/utils/deleteFromFirebase";
+import { Checkbox } from "@/components/ui/checkbox";
 import Certificate from '@/components/Certificate';
 import {
     Dialog,
@@ -55,6 +56,25 @@ interface ActionsCellProps extends CellContext<Participant, any> {
 }
 
 export const participantColumns: ColumnDef<Participant>[] = [
+    {
+        id: "select",
+        header: ({ table }) => (
+          <Checkbox
+            checked={table.getIsAllPageRowsSelected()}
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+            aria-label="Select all"
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+      },
     {
         accessorKey: "guestName",
         header: "Name",
