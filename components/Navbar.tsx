@@ -127,7 +127,7 @@ export const GuestNavbar = () => {
               <NavigationMenuItem>
                 <Link href="/admin/home" legacyBehavior passHref>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Admin
+                    Event
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
