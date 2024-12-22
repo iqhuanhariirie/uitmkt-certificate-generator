@@ -222,6 +222,8 @@ export const editDocumentInFirestore = async ({
 }) => {
   try {
     const eventDocRef = doc(db, "events", id);
+    const batch = writeBatch(db);
+    const now = Timestamp.now();
 
     // Handle basic updates
     const updatePayload: UpdateEventPayload = {
@@ -234,32 +236,31 @@ export const editDocumentInFirestore = async ({
       updatePayload.namePosition = payload.namePosition;
     }
 
-    // 3. Update event document with initial payload
-    await updateDoc(eventDocRef, updatePayload);
+    // Update event document with initial payload
+    batch.update(eventDocRef, updatePayload);
 
-    // 4. Handle file updates if provided
+    // Handle file updates
     if (payload.eventBanner) {
       const compressedBanner = await compressBanner(payload.eventBanner);
       const eventBannerURL = await uploadPhoto(id, compressedBanner, "banner");
-      await updateDoc(eventDocRef, { eventBanner: eventBannerURL });
+      batch.update(eventDocRef, { eventBanner: eventBannerURL });
     }
 
     if (payload.certificateTemplate) {
-      // Check for signed certificates
-      const signedCertsQuery = query(
-        collection(db, 'certificates'),
-        where('eventId', '==', id),
-        where('status', '==', 'signed')
+      const certificateTemplateURL = await uploadPhoto(
+        id,
+        payload.certificateTemplate,
+        "cert"
       );
-      const signedCertsSnapshot = await getDocs(signedCertsQuery);
-      const hasSignedCertificates = !signedCertsSnapshot.empty;
 
-      const certificateTemplateURL = await uploadPhoto(id, payload.certificateTemplate, "cert");
-
-      // Update event document
-      await updateDoc(eventDocRef, { 
+      // Store template history
+      batch.update(eventDocRef, {
         certificateTemplate: certificateTemplateURL,
-        lastTemplateUpdate: serverTimestamp()
+        lastTemplateUpdate: now,
+        templateHistory: arrayUnion({
+          url: certificateTemplateURL,
+          updatedAt: now
+        })
       });
 
       // Only update pending certificates
@@ -268,15 +269,18 @@ export const editDocumentInFirestore = async ({
         where('eventId', '==', id),
         where('status', '==', 'pending')
       );
-      const pendingCertsSnapshot = await getDocs(pendingCertsQuery);
-
-      const batch = writeBatch(db);
-      pendingCertsSnapshot.docs.forEach(doc => {
-        batch.update(doc.ref, { certificateTemplate: certificateTemplateURL });
+      
+      const pendingCerts = await getDocs(pendingCertsQuery);
+      pendingCerts.forEach(doc => {
+        batch.update(doc.ref, {
+          certificateTemplate: certificateTemplateURL,
+          lastTemplateUpdate: now
+        });
       });
-      await batch.commit();
     }
 
+    // Commit all changes
+    await batch.commit();
     console.log("Event successfully edited in Firebase!");
   } catch (error) {
     console.error("Editing event error occurred:", error);

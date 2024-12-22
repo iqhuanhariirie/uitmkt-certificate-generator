@@ -28,8 +28,12 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { ButtonRingLoader } from "./RingLoader";
 import CertificatePreview from "./CertificatePreview";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useEventData } from "@/context/EventDataContext";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "@/firebase/config";
+import { TemplateUpdateDialog } from "./TemplateUpdateDialog";
+import toast from "react-hot-toast";
 
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png"];
 const ACCEPTED_GUEST_LIST_TYPES = ["text/csv"];
@@ -117,11 +121,11 @@ const editingFormSchema = z.object({
       "Only .jpeg, .jpg, and .png file types are supported."
     )
     .optional(),
-    namePosition: z.object({
-      top: z.number().min(0).max(100),
-      left: z.number().min(0).max(100),
-      fontSize: z.number().min(8).max(72),
-    }).optional()
+  namePosition: z.object({
+    top: z.number().min(0).max(100),
+    left: z.number().min(0).max(100),
+    fontSize: z.number().min(8).max(72),
+  }).optional()
 });
 
 export type FormType = z.infer<typeof addingFormSchema>;
@@ -147,6 +151,12 @@ export const EventForm = ({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const { refreshData } = useEventData();
   const currentResolver = id ? editingFormSchema : addingFormSchema;
+  const [showTemplateDialog, setShowTemplateDialog] = useState(false);
+  const [templateFile, setTemplateFile] = useState<File | null>(null);
+  const [certificateStats, setCertificateStats] = useState({ signed: 0, pending: 0 });
+  const [canUpdateTemplate, setCanUpdateTemplate] = useState(true);
+  const [hasTemplateSelected, setHasTemplateSelected] = useState(false);
+
   const form = useForm<FormType>({
     resolver: zodResolver(currentResolver),
     mode: "onChange",
@@ -206,15 +216,92 @@ export const EventForm = ({
     }
   };
 
-  const handleCertificateTemplate = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const file = event.target.files[0];
-      form.setValue("certificateTemplate", file);
-      form.trigger("certificateTemplate");
+  const checkCertificateStatus = async (eventId: string) => {
+    const signedQuery = query(
+      collection(db, 'certificates'),
+      where('eventId', '==', eventId),
+      where('status', '==', 'signed')
+    );
+    const pendingQuery = query(
+      collection(db, 'certificates'),
+      where('eventId', '==', eventId),
+      where('status', '==', 'pending')
+    );
 
-      const url = URL.createObjectURL(file);
+    const [signedDocs, pendingDocs] = await Promise.all([
+      getDocs(signedQuery),
+      getDocs(pendingQuery)
+    ]);
+
+    return {
+      signed: signedDocs.size,
+      pending: pendingDocs.size
+    };
+  };
+
+  const handleCertificateTemplate = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files?.[0]) {
+      setHasTemplateSelected(false);
+      return;
+    }
+
+    const file = event.target.files[0];
+    setHasTemplateSelected(true);
+
+    if (id) { // If editing
+      console.log("Checking certificates for event ID:", id);
+      const stats = await checkCertificateStatus(id);
+      console.log("Retrieved stats:", stats);
+
+      setCertificateStats(stats);
+
+      if (stats.signed > 0) {
+        console.log("Has signed certificates:", stats.signed);
+        if (stats.pending > 0) {
+          console.log("Has pending certificates:", stats.pending);
+          // Show dialog first, then set other states
+          setTemplateFile(file);
+          setCanUpdateTemplate(true);
+
+          setTimeout(() => {
+          console.log("Opening template dialog");
+          setShowTemplateDialog(true);
+        }, 0);
+        return;
+          
+        } else {
+          console.log("No pending certificates");
+          setCanUpdateTemplate(false);
+          toast.error("There are no pending certificates to update with the new template.");
+          event.target.value = '';
+          setHasTemplateSelected(false);
+          return;
+        }
+        
+      }
+    }
+
+    // If creating new or no signed certificates
+    console.log("Setting template for new event");
+    setCanUpdateTemplate(true);
+    form.setValue("certificateTemplate", file);
+    form.trigger("certificateTemplate");
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+  };
+  useEffect(() => {
+    console.log("Template dialog state:", showTemplateDialog);
+    console.log("Certificate stats:", certificateStats);
+  }, [showTemplateDialog, certificateStats]);
+
+  const handleTemplateUpdateConfirm = () => {
+    if (templateFile) {
+      form.setValue("certificateTemplate", templateFile);
+      form.trigger("certificateTemplate");
+      const url = URL.createObjectURL(templateFile);
       setPreviewUrl(url);
     }
+    setShowTemplateDialog(false);
   };
 
   const handlePositionChange = (position: { top: number; left: number; fontSize: number }) => {
@@ -335,6 +422,14 @@ export const EventForm = ({
               </FormItem>
             )}
           />
+          {/* Template Update Dialog */}
+          <TemplateUpdateDialog
+            isOpen={showTemplateDialog}
+            onClose={() => setShowTemplateDialog(false)}
+            onConfirm={handleTemplateUpdateConfirm}
+            signedCount={certificateStats.signed}
+            pendingCount={certificateStats.pending}
+          />
           {previewUrl && (
             <FormField
               control={form.control}
@@ -354,15 +449,30 @@ export const EventForm = ({
               )}
             />
           )}
-          {formState.isSubmitting ? (
-            <Button disabled>
-              <ButtonRingLoader />
-            </Button>
-          ) : (
-            <Button type="submit" disabled={!formState.isValid}>
-              Submit
-            </Button>
-          )}
+          <div className="space-y-2">
+            {formState.isSubmitting ? (
+              <Button disabled>
+                <ButtonRingLoader />
+              </Button>
+            ) : (
+              <>
+                <Button
+                  type="submit"
+                  disabled={!!(
+                    !formState.isValid ||
+                    (id && !canUpdateTemplate && hasTemplateSelected)
+                  )}
+                >
+                  Submit
+                </Button>
+                {id && !canUpdateTemplate && hasTemplateSelected && (
+                  <p className="text-sm text-destructive">
+                    Cannot update template: No pending certificates available
+                  </p>
+                )}
+              </>
+            )}
+          </div>
         </form>
       </Form>
     </div>
