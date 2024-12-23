@@ -8,6 +8,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 export default function ParticipantsPage() {
   const params = useParams();
@@ -26,6 +27,7 @@ export default function ParticipantsPage() {
   }, [eventId]);
 
   return (
+    <ProtectedRoute requireAdmin>
     <div className="container mx-auto py-6">
       <div className="mb-6 space-y-4">
         <div className="flex items-center text-sm text-gray-500">
@@ -39,5 +41,6 @@ export default function ParticipantsPage() {
       </div>
       <ParticipantList eventId={eventId} />
     </div>
+    </ProtectedRoute>
   );
 }

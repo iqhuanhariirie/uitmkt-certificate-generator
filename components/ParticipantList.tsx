@@ -13,6 +13,9 @@ import { batchSignCertificates, signCertificate } from "@/utils/signCertificate"
 import { generateCertificatePDF } from "@/utils/generateCertificatePDF";
 import { useAuth } from "@/context/AuthContext";
 import { AddParticipants } from "@/components/AddParticipant";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { RingLoader } from '@/components/RingLoader';
+
 
 export function ParticipantList({ eventId }: { eventId: string }) {
   const { user, checkIfUserIsAdmin } = useAuth(); // Add this line
@@ -142,6 +145,7 @@ export function ParticipantList({ eventId }: { eventId: string }) {
   };
 
   return (
+    <ProtectedRoute>
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
@@ -187,8 +191,7 @@ export function ParticipantList({ eventId }: { eventId: string }) {
       {loading ? (
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-            <p className="mt-2">Loading participants...</p>
+            <RingLoader />
           </div>
         </div>
       ) : (
@@ -203,5 +206,6 @@ export function ParticipantList({ eventId }: { eventId: string }) {
         Total Participants: {filteredParticipants.length}
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

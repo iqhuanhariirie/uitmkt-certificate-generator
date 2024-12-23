@@ -21,6 +21,8 @@ import { useAuth } from "@/context/AuthContext";
 import { ChevronDown, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
+import ProtectedRoute from "@/components/ProtectedRoute";
+
 
 export const AdminNavbar = () => {
   const { user, logOut } = useAuth();
@@ -43,6 +45,13 @@ export const AdminNavbar = () => {
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
+            <NavigationMenuItem>
+                <Link href="/admin/home" legacyBehavior passHref>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    Event
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
             <NavigationMenuItem>
               <Link href="/docs" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
@@ -123,24 +132,7 @@ export const GuestNavbar = () => {
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
-            {user && checkIfUserIsAdmin(user) ? (
-              <NavigationMenuItem>
-                <Link href="/admin/home" legacyBehavior passHref>
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Event
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-            ) : null}
-            {user && checkIfUserIsAdmin(user) ? (
-              <NavigationMenuItem>
-              <Link href="/club" legacyBehavior passHref>
-                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  Club
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
-            ) : null}
+            
             <NavigationMenuItem>
               <Link href="/verify" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>

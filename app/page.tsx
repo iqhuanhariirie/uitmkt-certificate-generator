@@ -1,7 +1,7 @@
 import uitmLogo from "@/assets/UiTM Logo Vector.svg";
 import { FeatureCards } from "@/components/FeatureCards";
 import { Footer } from "@/components/Footer";
-import { GuestNavbar } from "@/components/Navbar";
+import { GuestNavbar, AdminNavbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,7 +10,7 @@ export default function Home() {
 	return (
 		<>
 			<div className="flex flex-col">
-				<GuestNavbar />
+				<AdminNavbar />
 				<section className="py-16 px-10 flex flex-col items-center mx-auto h-screen ">
 					<Image
 						src={uitmLogo}
