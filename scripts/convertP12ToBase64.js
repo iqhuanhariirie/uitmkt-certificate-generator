@@ -3,7 +3,7 @@ const path = require('path');
 
 try {
     // Read P12 file
-    const p12Path = path.join(__dirname, '../certificates/ecdsa.p12');
+    const p12Path = path.join(__dirname, '../certificatesRSA/certificate.p12');
     const p12Content = fs.readFileSync(p12Path);
     
     // Convert to base64

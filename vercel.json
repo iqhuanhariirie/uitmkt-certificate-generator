@@ -3,6 +3,6 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "env": {
-    "NODE_OPTIONS": "--experimental-fetch --openssl-legacy-provider"
+    "NODE_OPTIONS": "--openssl-legacy-provider"
   }
 }
