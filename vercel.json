@@ -1,10 +1,8 @@
 {
-    "buildCommand": "npm run build",
-    "installCommand": "npm install",
-    "framework": "nextjs",
-    "build": {
-    "env": {
-      "NODE_OPTIONS": "--no-experimental-fetch"
-    }
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "env": {
+    "NODE_OPTIONS": "--experimental-fetch --openssl-legacy-provider"
   }
-  }
+}
