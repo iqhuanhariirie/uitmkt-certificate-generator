@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import GoogleButton from "react-google-button";
 
 export const AdminLoginButton = () => {
@@ -18,7 +18,8 @@ export const AdminLoginButton = () => {
     }
   };
 
-  useEffect(() => {
+  // Use useCallback to memoize the validation function
+  const validateUser = useCallback(() => {
     if (user !== null) {
       if (checkIfUserIsAdmin(user)) {
         setValidUser(true);
@@ -28,34 +29,25 @@ export const AdminLoginButton = () => {
         logOut();
       }
     }
-  }, [user]);
+  }, [user, checkIfUserIsAdmin, logOut, router]);
 
-  if (validUser) {
-    return (
-      <>
-        <GoogleButton
-          data-te-ripple-init
-          type="light"
-          onClick={() => {
-            handleGoogleLogin();
-          }}
-        />
-      </>
-    );
-  } else {
-    return (
-      <>
-        <GoogleButton
-          data-te-ripple-init
-          type="light"
-          onClick={() => {
-            handleGoogleLogin();
-          }}
-        />
+  // Use the memoized function in useEffect
+  useEffect(() => {
+    validateUser();
+  }, [validateUser]);
+
+  return (
+    <>
+      <GoogleButton
+        data-te-ripple-init
+        type="light"
+        onClick={handleGoogleLogin}
+      />
+      {!validUser && (
         <span className="font-title text-red-600">
           Invalid user. Please try again.
         </span>
-      </>
-    );
-  }
+      )}
+    </>
+  );
 };
