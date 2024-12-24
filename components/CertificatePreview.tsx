@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import * as Slider from '@radix-ui/react-slider';
+import Image from 'next/image';
 
 interface CertificatePreviewProps {
   templateUrl: string;
@@ -45,14 +46,18 @@ const CertificatePreview = ({ templateUrl, sampleName, onPositionChange }: Certi
         ref={containerRef}
         className="relative w-full h-[400px] border rounded-lg overflow-hidden"
       >
-        
+
         {templateUrl && (
           <>
-            <img
-              src={templateUrl}
-              alt="Certificate Template"
-              className="absolute w-full h-full object-contain"
-            />
+            <div className="relative w-full h-full">
+              <Image
+                src={templateUrl}
+                alt="Certificate Template"
+                fill
+                style={{ objectFit: 'contain' }}
+                priority
+              />
+            </div>
             <div
               style={{
                 position: 'absolute',
@@ -66,7 +71,7 @@ const CertificatePreview = ({ templateUrl, sampleName, onPositionChange }: Certi
             >
               {sampleName}
               <div className="text-xs text-red-500">
-              {/* {`PDF size: ${position.fontSize}px`} */}
+                {/* {`PDF size: ${position.fontSize}px`} */}
               </div>
             </div>
           </>

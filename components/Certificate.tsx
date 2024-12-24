@@ -37,14 +37,7 @@ const Certificate = ({ certificateTemplate, guestName, namePosition }: Certifica
       width: '100%',
       height: '100%',
     },
-    // nameContainer: {
-    //   position: 'relative',
-    //   width: '100%',
-    //   top: `${namePosition.top}%`,
-    //   left: `${namePosition.left}%`,
-    //   textAlign: 'center',
-    //   transform: 'translate(-50%, -50%)',
-    // },
+    
     name: {
       position: 'absolute',
       left: `${namePosition.left}%`,
@@ -55,11 +48,7 @@ const Certificate = ({ certificateTemplate, guestName, namePosition }: Certifica
       transform: `translate(-50%, -50%)`,
       textAlign: 'center',
     },
-    // name: {
-    //   fontSize: namePosition.fontSize,
-    //   color: '#000000',
-    //   fontFamily: 'Helvetica-Bold',
-    // },
+    
   });
 
   return (
