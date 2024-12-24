@@ -28,7 +28,7 @@ const nextConfig = {
       },
     ];
   },
-  target: "serverless",
+  output: "standalone",
   future: { webpack5: true },
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
       config.resolve.alias.canvas = false
