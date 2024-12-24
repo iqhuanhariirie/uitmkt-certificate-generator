@@ -54,11 +54,6 @@ export const EventDropdown = ({ eventData }: { eventData: Event }) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <Link href={`/event/${eventData.id}`} legacyBehavior>
-            <a target="_blank">
-              <DropdownMenuItem>View Event Page</DropdownMenuItem>
-            </a>
-          </Link>
           <DropdownMenuItem>
             <Link 
               href={`/event/${eventData.id}/participant`}

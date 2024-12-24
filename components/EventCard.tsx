@@ -1,6 +1,5 @@
 "use client";
 
-import { EventCardContent } from "@/components/EventCardContent";
 import { RingLoader } from "@/components/RingLoader";
 import {
   Card,
@@ -103,19 +102,6 @@ export const EventCard = ({ id }: { id: string }) => {
                         : ""}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="flex flex-col items-center justify-center gap-5">
-                    <EventCardContent
-                      guestList={eventCardData?.guestList || []}
-                      certificateTemplate={
-                        eventCardData?.certificateTemplate || ""
-                      }
-                      eventName={eventCardData?.eventName || ""}
-                      eventDate={
-                        eventCardData?.eventDate ||
-                        Timestamp.fromDate(new Date())
-                      }
-                    />
-                  </CardContent>
                 </Card>
               </div>
             </div>
