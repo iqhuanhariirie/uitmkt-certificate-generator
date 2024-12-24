@@ -50,15 +50,20 @@ export async function POST(request: NextRequest) {
     }
 
     const p12Buffer = Buffer.from(process.env.P12_CERTIFICATE, 'base64');
+    console.log('P12 buffer created, length:', p12Buffer.length);
+
     const signer = new P12Signer(p12Buffer, {
       passphrase: process.env.P12_PASSPHRASE
     });
+    console.log('Signer created');
 
     const signPdf = new SignPdf();
     const signedPdf = await signPdf.sign(
       Buffer.from(pdfBytesWithPlaceholder),
       signer
     );
+
+    console.log('PDF signed successfully');
 
     // 3. Upload signed PDF using Admin SDK
     const bucket = adminStorage.bucket();
