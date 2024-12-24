@@ -28,13 +28,14 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { BulkActions } from '@/components/BulkActions';
 import { Participant } from "./ui/participant-columns";
+import { DistributeCertificates } from './DistributeCertificates';
 
 interface CellProps<TData> {
     row: Row<TData>;
     onRefresh?: () => Promise<void>;
-  }
+}
 
-  type CustomCellContext<TData, TValue> = CellContext<TData, TValue> & {
+type CustomCellContext<TData, TValue> = CellContext<TData, TValue> & {
     onRefresh?: () => Promise<void>;
 };
 
@@ -42,16 +43,18 @@ interface DataTableProps {
     columns: ColumnDef<Participant, any>[];
     data: Participant[];
     onRefresh?: () => Promise<void>;
+    eventName: string;
 }
 
 export function DataTable<TData, TValue>({
     columns,
     data,
-    onRefresh
+    onRefresh,
+    eventName
 }: DataTableProps) {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-    const [rowSelection, setRowSelection] = useState<RowSelectionState>({}); 
+    const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
     // Modify columns to include onRefresh
     const columnsWithRefresh = columns.map(col => {
@@ -59,11 +62,12 @@ export function DataTable<TData, TValue>({
             return {
                 ...col,
                 cell: (props: CellContext<Participant, any>) => {
-                    const customProps= {
+                    const customProps = {
                         ...props,
                         onRefresh
                     };
-                    return (col.cell as any)(customProps);                }
+                    return (col.cell as any)(customProps);
+                }
             };
         }
         return col;
@@ -90,6 +94,11 @@ export function DataTable<TData, TValue>({
     return (
         <div>
             <div className="flex items-center justify-between py-4">
+                <DistributeCertificates
+                    selectedParticipants={table.getSelectedRowModel().rows.map(row => row.original)}
+                    eventName={eventName} // Pass this as a prop to DataTable
+                    onRefresh={onRefresh}
+                />
                 <BulkActions table={table} onRefresh={onRefresh} />
             </div>
             <div className="rounded-md border">

@@ -22,6 +22,7 @@ export function ParticipantList({ eventId }: { eventId: string }) {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [eventName, setEventName] = useState("");
 
   const fetchParticipants = useCallback(async () => {
     try {
@@ -31,12 +32,13 @@ export function ParticipantList({ eventId }: { eventId: string }) {
         where("eventId", "==", eventId)
       );
 
-      // First get the event details to get the namePosition
+      // First get the event details
     const eventDoc = await getDoc(doc(db, "events", eventId));
     if (!eventDoc.exists()) {
       throw new Error("Event not found");
     }
     const eventData = eventDoc.data();
+    setEventName(eventData.eventName);
 
     const querySnapshot = await getDocs(q);
     const participantsData = querySnapshot.docs.map(doc => ({
@@ -199,6 +201,7 @@ export function ParticipantList({ eventId }: { eventId: string }) {
           columns={participantColumns}
           data={filteredParticipants}
           onRefresh={fetchParticipants}
+          eventName={eventName}
         />
       )}
 

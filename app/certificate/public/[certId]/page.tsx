@@ -8,6 +8,7 @@ import { Participant } from "@/components/ui/participant-columns";
 import { Button } from "@/components/ui/button";
 import { Worker, Viewer } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import uitmLogo from "@/assets/UiTM Logo Vector.svg";
 import {
   Card,
   CardContent,
@@ -16,6 +17,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Download } from "lucide-react";
+import { RingLoader } from "@/components/RingLoader";
+import Image from "next/image";
 
 interface EventData {
     id: string;
@@ -88,8 +91,7 @@ export default function PublicCertificateView({
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-2">Loading your certificate...</p>
+          <RingLoader />
         </div>
       </div>
     );
@@ -120,8 +122,8 @@ export default function PublicCertificateView({
       <Card className="mb-8">
         <CardHeader>
           <div className="flex flex-col items-center text-center">
-            <img 
-              src="/logo.png" 
+            <Image 
+              src={uitmLogo}
               alt="Organization Logo" 
               className="h-16 mb-4"
             />
