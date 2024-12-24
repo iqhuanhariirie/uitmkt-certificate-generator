@@ -14,7 +14,7 @@ const Layout = ({ children }: { children: ReactNode }) => {
     if (user === null) {
       router.push("/admin/login");
     }
-  }, [user]);
+  }, [user, router]);
   return (
     <>
       <div className="h-screen flex flex-col">

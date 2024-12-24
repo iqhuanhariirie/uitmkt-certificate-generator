@@ -104,7 +104,7 @@ export default function PublicCertificateView({
           <CardHeader>
             <CardTitle>Certificate Unavailable</CardTitle>
             <CardDescription>
-              We couldn't find the certificate you're looking for.
+            We couldn&apos;t find the certificate you&apos;re looking for.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-4">
