@@ -35,7 +35,7 @@ export default function ParticipantsPage() {
             Events
           </Link>
           <ChevronRight className="h-4 w-4 mx-2" />
-          <span className="text-gray-900">{eventName}</span>
+          <span className="text-gray-700">{eventName}</span>
         </div>
         {/* <h1 className="text-2xl font-bold">{eventName}</h1> */}
       </div>
