@@ -14,6 +14,8 @@ import { auth } from "../firebase/config";
 
 export type Admin = {
   email: string;
+  role: 'super_admin'|'admin';
+  createdAt: Date;
 };
 
 export type AuthContextProps = {
@@ -21,6 +23,7 @@ export type AuthContextProps = {
   logOut: () => void;
   user: User | null;
   checkIfUserIsAdmin: (user: User) => boolean;
+  checkIfUserIsSuperAdmin: (user: User) => boolean;
   loading: boolean;
 };
 
@@ -29,6 +32,7 @@ const AuthContext = createContext<AuthContextProps>({
   logOut: () => {},
   user: null,
   checkIfUserIsAdmin: (user: User) => false,
+  checkIfUserIsSuperAdmin: (user: User) => false,
   loading: true,
 });
 
@@ -61,6 +65,8 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       const data: Admin[] = snap.docs.map((doc) => ({
         email: doc.data().email,
+        role: doc.data().role,
+        createdAt: doc.data().createdAt || ''
       }));
       setAdminList(data);
       setLoading(false);
@@ -75,9 +81,15 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
+  const checkIfUserIsSuperAdmin = (user: User) => {
+    return adminList.some(
+      (admin) => admin.email === user.email && admin.role === 'super_admin'
+    );
+  };
+
   return (
     <AuthContext.Provider
-      value={{ googleLogin, logOut, user, checkIfUserIsAdmin, loading }}
+      value={{ googleLogin, logOut, user, checkIfUserIsAdmin, checkIfUserIsSuperAdmin, loading }}
     >
       {children}
     </AuthContext.Provider>

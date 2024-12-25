@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Mail } from "lucide-react";
+import { AlertCircle, Mail } from "lucide-react";
 import { Participant } from "./ui/participant-columns";
 import toast from "react-hot-toast";
 
@@ -29,16 +29,20 @@ export function DistributeCertificates({
   const [isOpen, setIsOpen] = useState(false);
   const [isDistributing, setIsDistributing] = useState(false);
 
+  // Filter out unsigned certificates
+  const signedParticipants = selectedParticipants.filter(p => p.status === 'signed');
+  const unsignedParticipants = selectedParticipants.filter(p => p.status !== 'signed');
+
   const handleDistribute = async () => {
-    if (selectedParticipants.length === 0) return;
+    if (signedParticipants.length === 0) return;
 
     const toastId = toast.loading(
-      `Sending certificates to ${selectedParticipants.length} participants...`
+      `Sending certificates to ${signedParticipants.length} participants...`
     );
     setIsDistributing(true);
 
     try {
-      const recipients = selectedParticipants.map(participant => ({
+      const recipients = signedParticipants.map(participant => ({
         email: participant.email,
         guestName: participant.guestName,
         eventName: eventName,
@@ -81,27 +85,66 @@ export function DistributeCertificates({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" disabled={selectedParticipants.length === 0}>
+        <Button 
+          variant="outline" 
+          disabled={selectedParticipants.length === 0 || signedParticipants.length === 0}
+        >
           <Mail className="mr-2 h-4 w-4" />
-          Distribute Certificates ({selectedParticipants.length})
+          Distribute Certificates ({signedParticipants.length})
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Distribute Certificates</DialogTitle>
           <DialogDescription>
-            Send certificate access links to {selectedParticipants.length} participants via email.
+            Send certificate access links to {signedParticipants.length} participants via email.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="max-h-[200px] overflow-y-auto">
-          <ul className="space-y-2">
-            {selectedParticipants.map((participant) => (
-              <li key={participant.id} className="text-sm">
-                {participant.guestName} ({participant.email})
-              </li>
-            ))}
-          </ul>
+        {unsignedParticipants.length > 0 && (
+          <div className="rounded-md bg-red-50 p-4 mb-4">
+            <div className="flex">
+              <AlertCircle className="h-5 w-5 text-red-400" />
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">
+                  Unsigned Certificates
+                </h3>
+                <div className="mt-1 text-sm text-red-700">
+                  {unsignedParticipants.length} selected certificate(s) cannot be sent because they are not signed yet.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="max-h-[200px] overflow-y-auto mt-4">
+          {signedParticipants.length > 0 && (
+            <>
+              <h3 className="font-medium mb-2 text-sm">Ready to Send:</h3>
+              <ul className="space-y-2">
+                {signedParticipants.map((participant) => (
+                  <li key={participant.id} className="text-sm">
+                    {participant.guestName} ({participant.email})
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          
+          {unsignedParticipants.length > 0 && (
+            <>
+              <h3 className="font-medium mt-4 mb-2 text-sm text-red-600">
+                Needs Signature:
+              </h3>
+              <ul className="space-y-2">
+                {unsignedParticipants.map((participant) => (
+                  <li key={participant.id} className="text-sm text-red-600">
+                    {participant.guestName} ({participant.email})
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </div>
 
         <DialogFooter>
@@ -114,9 +157,9 @@ export function DistributeCertificates({
           </Button>
           <Button
             onClick={handleDistribute}
-            disabled={isDistributing}
+            disabled={isDistributing || signedParticipants.length === 0}
           >
-            {isDistributing ? 'Sending...' : 'Send Emails'}
+            {isDistributing ? 'Sending...' : `Send ${signedParticipants.length} Email${signedParticipants.length !== 1 ? 's' : ''}`}
           </Button>
         </DialogFooter>
       </DialogContent>

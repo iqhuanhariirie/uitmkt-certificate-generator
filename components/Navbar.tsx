@@ -18,14 +18,14 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { useAuth } from "@/context/AuthContext";
-import { ChevronDown, Moon, Sun } from "lucide-react";
+import { ChevronDown, Moon, Sun, Settings, Users } from "lucide-react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 
 export const AdminNavbar = () => {
-  const { user, logOut } = useAuth();
+  const { user, logOut, checkIfUserIsSuperAdmin } = useAuth();
   const { theme, setTheme } = useTheme();
   return (
     <nav className="flex bg-white drop-shadow-xl p-5 justify-between dark:bg-[#080E1D]">
@@ -73,6 +73,16 @@ export const AdminNavbar = () => {
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
+            {user && checkIfUserIsSuperAdmin(user) && (
+              <NavigationMenuItem>
+                <Link href="/admin/manage" legacyBehavior passHref>
+                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    <Users className="w-4 h-4 mr-2" />
+                    Manage Admins
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+            )}
             
             <NavigationMenuItem>
               <button
@@ -93,7 +103,7 @@ export const AdminNavbar = () => {
           {user ? (
             <AvatarImage src={user.photoURL || undefined} alt="@blurridge" />
           ) : (
-            <AvatarFallback>ZM</AvatarFallback>
+            <AvatarFallback>Guest</AvatarFallback>
           )}
         </Avatar>
         <DropdownMenu>
@@ -103,6 +113,14 @@ export const AdminNavbar = () => {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+          {user && checkIfUserIsSuperAdmin(user) && (
+              <DropdownMenuItem>
+                <Link href="/admin/manage" className="flex items-center">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Admin Settings
+                </Link>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={logOut}>Logout</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -167,7 +185,7 @@ export const GuestNavbar = () => {
           <>
             <Avatar>
               <AvatarImage src={user.photoURL || undefined} alt="@blurridge" />
-              <AvatarFallback>ZM</AvatarFallback>
+              <AvatarFallback>Guest</AvatarFallback>
             </Avatar>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

@@ -10,7 +10,7 @@
 	},
 	"engines": {
 		"node": "20.x"
-	  },
+	},
 	"dependencies": {
 		"@hookform/resolvers": "^3.3.4",
 		"@mdx-js/loader": "^3.0.1",
@@ -23,6 +23,8 @@
 		"@radix-ui/react-label": "^2.0.2",
 		"@radix-ui/react-navigation-menu": "^1.1.4",
 		"@radix-ui/react-popover": "^1.0.7",
+		"@radix-ui/react-select": "^2.1.4",
+		"@radix-ui/react-separator": "^1.1.1",
 		"@radix-ui/react-slider": "^1.2.1",
 		"@radix-ui/react-slot": "^1.0.2",
 		"@react-email/components": "^0.0.31",
@@ -67,6 +69,7 @@
 		"react-hook-form": "^7.50.1",
 		"react-hot-toast": "^2.4.1",
 		"react-loader-spinner": "^6.1.6",
+		"react-select": "^5.9.0",
 		"resend": "^4.0.1",
 		"tailwind-merge": "^2.2.1",
 		"tailwindcss": "3.4.1",
