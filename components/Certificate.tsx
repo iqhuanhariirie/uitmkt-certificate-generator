@@ -19,18 +19,12 @@ const Certificate = ({ certificateTemplate, guestName, namePosition }: Certifica
       height: '595pt',
       overflow: 'hidden',
     },
-    // contentWrapper: {
-    //   position: 'relative',
-    //   width: '100%',
-    //   height: '100%',
-    // },
     background: {
       position: 'absolute',
       top: 0,
       left: 0,
       width: '100%',
       height: '100%',
-      // objectFit: 'contain',
     },
     nameContainer: {
       position: 'absolute',
@@ -54,6 +48,7 @@ const Certificate = ({ certificateTemplate, guestName, namePosition }: Certifica
   return (
     <Document>
       <Page size={[842, 595]} style={styles.page} orientation="landscape">
+      {/* eslint-disable-next-line jsx-a11y/alt-text */}
         <Image src={certificateTemplate} style={styles.background} />
         <View style={styles.nameContainer}>
           <Text style={styles.name}>{guestName}</Text>

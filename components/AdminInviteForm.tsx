@@ -48,7 +48,7 @@ export const AdminInviteForm = () => {
 
   const onSubmit = async (values: FormValues) => {
     if (!user || !checkIfUserIsSuperAdmin(user)) {
-      toast.error("You don't have permission to add administrators.");
+      toast.error("You don&apos;t have permission to add administrators.");
       return;
     }
 
