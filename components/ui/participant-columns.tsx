@@ -103,7 +103,7 @@ const ActionCell = (props: ActionsCellProps) => {
 
             // Optional: Open signed certificate in new tab
             if (result.url) {
-                window.open(result.url, '_blank');
+                window.open(`/event/${participant.eventId}/certificate/${participant.id}`, '_blank');
             }
         } catch (error) {
             setStatus('error');
