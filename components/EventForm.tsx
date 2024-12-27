@@ -174,8 +174,33 @@ export const EventForm = ({
 
   const { formState } = form;
 
+  const checkEventNameExists = async (eventName: string): Promise<boolean> => {
+    try {
+      const eventsRef = collection(db, 'events');
+      const q = query(eventsRef, where('eventName', '==', eventName));
+      const querySnapshot = await getDocs(q);
+
+      // If editing, exclude the current event
+      if (id) {
+        return querySnapshot.docs.some(doc => doc.id !== id);
+      }
+
+      return !querySnapshot.empty;
+    } catch (error) {
+      console.error('Error checking event name:', error);
+      return false;
+    }
+  };
+
   const onSubmit = async (payload: FormType) => {
     try {
+      const nameExists = await checkEventNameExists(payload.eventName);
+
+      if (nameExists) {
+        toast.error("An event with this name already exists");
+        return;
+      }
+
       console.log("Submitting form with name position:", payload.namePosition);
       console.log("Payload before sending to Firestore:", payload);
       console.log("Guest list file:", payload.guestList);
@@ -192,7 +217,21 @@ export const EventForm = ({
       }
     } catch (error) {
       console.error("Error submitting form:", error);
+      toast.error("Failed to create event");
+    }
+  };
 
+  const handleEventNameChange = async (value: string) => {
+    if (!value) return;
+
+    const nameExists = await checkEventNameExists(value);
+    if (nameExists) {
+      form.setError('eventName', {
+        type: 'manual',
+        message: 'An event with this name already exists'
+      });
+    } else {
+      form.clearErrors('eventName');
     }
   };
 
@@ -264,11 +303,11 @@ export const EventForm = ({
           setCanUpdateTemplate(true);
 
           setTimeout(() => {
-          console.log("Opening template dialog");
-          setShowTemplateDialog(true);
-        }, 0);
-        return;
-          
+            console.log("Opening template dialog");
+            setShowTemplateDialog(true);
+          }, 0);
+          return;
+
         } else {
           console.log("No pending certificates");
           setCanUpdateTemplate(false);
@@ -277,7 +316,7 @@ export const EventForm = ({
           setHasTemplateSelected(false);
           return;
         }
-        
+
       }
     }
 
@@ -361,7 +400,13 @@ export const EventForm = ({
               <FormItem>
                 <FormLabel>Event Name</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      handleEventNameChange(e.target.value);
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

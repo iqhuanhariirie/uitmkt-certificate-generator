@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     if (!certificateDoc.exists) {
       return NextResponse.json({
         isValid: false,
-        error: ['Digital signature found but certificate not found in our records']
+        error: ['Digital signature is found but certificate is not found in our records']
       });
     }
 
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     if (certificateData?.status !== 'signed') {
       return NextResponse.json({
         isValid: false,
-        error: ['Digital signature found but certificate is not properly signed in our records']
+        error: ['Digital signature is found but certificate is not properly signed in our records']
       });
     }
 
