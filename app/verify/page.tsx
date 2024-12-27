@@ -14,7 +14,7 @@ type VerificationStatus = 'idle' | 'loading' | 'valid' | 'invalid';
 interface VerificationResponse {
   isValid: boolean;
   certificate?: Certificate;
-  error?: string;
+  error?: string | string[];
   signatureInfo?: {
     reason?: string;
     name?: string;
@@ -31,6 +31,29 @@ export default function VerifyPage() {
   const [error, setError] = useState<string | null>(null);
 
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const droppedFile = e.dataTransfer.files[0];
+    if (droppedFile) {
+      if (droppedFile.type !== 'application/pdf') {
+        setError('Please upload a PDF file');
+        return;
+      }
+      setFile(droppedFile);
+      setPreviewUrl(URL.createObjectURL(droppedFile));
+      setError(null);
+      setVerificationStatus('idle');
+      setVerificationResult(null);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -103,7 +126,12 @@ export default function VerifyPage() {
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Upload Section */}
-          <div className="border-2 border-dashed border-gray-200 rounded-lg p-6">
+          <div
+            className="border-2 border-dashed border-gray-200 rounded-lg p-6 cursor-pointer transition-colors duration-200 ease-in-out hover:bg-gray-50"
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            onClick={() => document.getElementById('certificate-upload')?.click()}
+          >
             <div className="flex flex-col items-center gap-4">
               <div className="p-4 bg-gray-50 rounded-full">
                 <Upload className="h-8 w-8 text-gray-400" />
@@ -123,7 +151,10 @@ export default function VerifyPage() {
               />
               <Button
                 variant="outline"
-                onClick={() => document.getElementById('certificate-upload')?.click()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  document.getElementById('certificate-upload')?.click();
+                }}
               >
                 Select File
               </Button>
@@ -133,7 +164,7 @@ export default function VerifyPage() {
           {/* Error Message */}
           {error && (
             <div className="text-red-500 text-center text-sm">
-              {error}
+              {Array.isArray(error) ? error.join(', ') : error}
             </div>
           )}
 

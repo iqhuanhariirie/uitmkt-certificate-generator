@@ -9,47 +9,39 @@ export async function POST(request: NextRequest) {
 
     if (!file) {
       return NextResponse.json(
-        { error: 'No file provided' },
+        { error: ['No file provided'] },
         { status: 400 }
       );
     }
 
-    // 1. First verify the signature
+    // 1. First verify the signature and format
     const pdfBuffer = await file.arrayBuffer();
     const signatureVerification = await verifySignature(pdfBuffer);
 
-    if (!signatureVerification.isValid) {
+    // If there's no valid certificate ID, don't check the database
+    if (!signatureVerification.certificateId) {
       return NextResponse.json({
         isValid: false,
         error: signatureVerification.error
       });
     }
 
-    if (!signatureVerification.certificateId) {
-      return NextResponse.json({
-        isValid: false,
-        error: 'Certificate ID not found in document'
-      });
-    }
-
-    // 2. Verify against database
+    // 2. Only check database if we have a valid certificate ID format
     const certificateRef = adminDb.collection('certificates').doc(signatureVerification.certificateId);
     const certificateDoc = await certificateRef.get();
 
     if (!certificateDoc.exists) {
       return NextResponse.json({
         isValid: false,
-        error: 'Certificate not found in our records'
+        error: ['Digital signature found but certificate not found in our records']
       });
     }
 
     const certificateData = certificateDoc.data();
-
-    // 3. Additional verification checks
     if (certificateData?.status !== 'signed') {
       return NextResponse.json({
         isValid: false,
-        error: 'Certificate is not properly signed'
+        error: ['Digital signature found but certificate is not properly signed in our records']
       });
     }
 
@@ -62,7 +54,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Verification error:', error);
     return NextResponse.json(
-      { error: 'Failed to verify certificate' },
+      { error: ['Failed to verify certificate'] },
       { status: 500 }
     );
   }
