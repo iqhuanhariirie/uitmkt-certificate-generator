@@ -45,13 +45,13 @@ export const AdminNavbar = () => {
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
-            <NavigationMenuItem>
+            {/* <NavigationMenuItem>
                 <Link href="/admin/home" legacyBehavior passHref>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                     Event
                   </NavigationMenuLink>
                 </Link>
-              </NavigationMenuItem>
+              </NavigationMenuItem> */}
             <NavigationMenuItem>
               <Link href="/docs" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
@@ -59,13 +59,13 @@ export const AdminNavbar = () => {
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
-            <NavigationMenuItem>
+            {/* <NavigationMenuItem>
               <Link href="/club" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   Club
                 </NavigationMenuLink>
               </Link>
-            </NavigationMenuItem>
+            </NavigationMenuItem> */}
             <NavigationMenuItem>
               <Link href="/verify" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
@@ -103,7 +103,7 @@ export const AdminNavbar = () => {
           {user ? (
             <AvatarImage src={user.photoURL || undefined} alt="@blurridge" />
           ) : (
-            <AvatarFallback>Guest</AvatarFallback>
+            <AvatarFallback>G</AvatarFallback>
           )}
         </Avatar>
         <DropdownMenu>
@@ -185,7 +185,7 @@ export const GuestNavbar = () => {
           <>
             <Avatar>
               <AvatarImage src={user.photoURL || undefined} alt="@blurridge" />
-              <AvatarFallback>Guest</AvatarFallback>
+              <AvatarFallback>G</AvatarFallback>
             </Avatar>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

@@ -41,12 +41,13 @@ export const FeatureCards = () => {
               <div className="flex flex-col justify-center">
                 <ScrollText size={48} className="mx-auto" />
               </div>
-              <CardTitle>Secure Participant Validation</CardTitle>
+              <CardTitle>Digital Signature Integration</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-center">
-                Validate participants against the guest list to ensure only
-                valid guests receive certificates.
+                Implement Digital Signature (RSA) in certificates 
+                to ensure integrity, confidentiality and authenticity of certificates,
+                Enable users to sign and verify certificates.
               </p>
             </CardContent>
           </Card>
