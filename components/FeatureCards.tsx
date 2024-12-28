@@ -4,96 +4,54 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
-import { Linkedin, PaintBucket, ScrollText, Zap } from "lucide-react";
+import { FileSpreadsheet, Mail, ScrollText, Zap } from "lucide-react";
 
 export const FeatureCards = () => {
-  return (
-    <>
-      <div className="flex gap-3">
-        <div className="flex flex-col gap-2">
-          <Card className="w-96 hover:bg-gray-200 dark:hover:bg-gray-900">
-            <CardHeader className="gap-3 flex items-center">
-              <div className="flex flex-col justify-center">
-                <Zap size={48} className="mx-auto" />
-              </div>
-              <CardTitle>Instant Certificate Generation</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-center">
-                Generate professional certificates on demand, saving time and
-                effort.
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="w-96 hover:bg-gray-200 dark:hover:bg-gray-900">
-            <CardHeader className="gap-3 flex items-center">
-              <CardTitle>Seamless Data Import</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-center">
-                Import participant data from CSV files for quick certificate
-                generation.
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="w-96 hover:bg-gray-200 dark:hover:bg-gray-900">
-            <CardHeader className="gap-3 flex items-center">
-              <div className="flex flex-col justify-center">
-                <ScrollText size={48} className="mx-auto" />
-              </div>
-              <CardTitle>Digital Signature Integration</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-center">
-                Implement Digital Signature (RSA) in certificates 
-                to ensure integrity, confidentiality and authenticity of certificates,
-                Enable users to sign and verify certificates.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-        <div className="flex flex-col gap-2">
-          <Card className="w-96 hover:bg-gray-200 dark:hover:bg-gray-900">
-            <CardHeader className="gap-3 flex items-center">
-              <div className="flex flex-col justify-center">
-                <PaintBucket size={48} className="mx-auto" />
-              </div>
-              <CardTitle>Customizable Event Pages</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-center">
-                Each event gets its dedicated webpage to access and view
-                certificates.
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="w-96 hover:bg-gray-200 dark:hover:bg-gray-900">
-            <CardHeader className="gap-3 flex items-center">
-              <div className="flex flex-col justify-center">
-                <Linkedin size={48} className="mx-auto" />
-              </div>
-              <CardTitle>LinkedIn Integration</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-center">
-                Enable participants to add their certificates to LinkedIn,
-                enhancing their credentials.
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="w-96 hover:bg-gray-200 dark:hover:bg-gray-900">
-            <CardHeader className="gap-3 flex items-center">
-              <CardTitle>Bug Reporting and Support</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-center">
-                Alpha-stage app with a direct channel for reporting bugs and
-                contacting the developer for assistance.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </>
-  );
+	return (
+		<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+			{features.map((feature, index) => (
+				<Card 
+					key={index} 
+					className="hover:shadow-lg transition-all duration-300 hover:scale-105 dark:hover:bg-secondary/20 backdrop-blur-sm"
+				>
+					<CardHeader className="space-y-4">
+						<div className="w-12 h-12 mx-auto bg-primary/10 dark:bg-primary/20 rounded-xl flex items-center justify-center">
+							{feature.icon}
+						</div>
+						<CardTitle className="text-center text-foreground">
+							{feature.title}
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						<p className="text-center text-muted-foreground">
+							{feature.description}
+						</p>
+					</CardContent>
+				</Card>
+			))}
+		</div>
+	);
 };
+
+const features = [
+	{
+		icon: <Zap size={24} className="text-primary dark:text-primary/80" />,
+		title: "Instant Certificate Generation",
+		description: "Generate professional certificates on demand, saving time and effort."
+	},
+	{
+		icon: <FileSpreadsheet size={24} className="text-primary dark:text-primary/80" />,
+		title: "Seamless Data Import",
+		description: "Import participant data from CSV files for quick certificate generation."
+	},
+	{
+		icon: <ScrollText size={24} className="text-primary dark:text-primary/80" />,
+		title: "Digital Signature Integration",
+		description: "Implement Digital Signature (RSA) to ensure integrity, confidentiality and authenticity of certificates."
+	},
+	{
+		icon: <Mail size={24} className="text-primary dark:text-primary/80" />,
+		title: "Simple Certificate Distribution",
+		description: "Distribute signed certificates to participants via email, ensuring efficient and timely delivery."
+	}
+];

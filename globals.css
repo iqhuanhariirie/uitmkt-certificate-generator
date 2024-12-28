@@ -1,0 +1,4 @@
+.section-transition {
+	scroll-margin-top: 5rem;
+	transition: all 0.5s ease-in-out;
+}
