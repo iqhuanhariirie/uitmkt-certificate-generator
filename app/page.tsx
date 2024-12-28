@@ -19,11 +19,11 @@ export default function Home() {
 						priority
 					/>
 					<span className="font-bold text-5xl text-center w-11/12 leading-snug">
-						Empower your career with instant certificates, Seamlessly.
+						Implementation of Digital Signature in certificates.
 					</span>
 					<span className="font-medium text-2xl text-center leading-snug">
 						A web application designed to simplify the process of generating
-						e-certificates on demand.
+						e-certificates on demand with digital signature features.
 					</span>
 					<div className="mt-4 flex gap-5">
 						<Link href="/admin" legacyBehavior passHref>
