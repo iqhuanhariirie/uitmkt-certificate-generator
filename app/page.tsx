@@ -1,3 +1,5 @@
+"use client";
+
 import uitmLogo from "@/assets/UiTM Logo Vector.svg";
 import { FeatureCards } from "@/components/FeatureCards";
 import { Footer } from "@/components/Footer";
@@ -5,9 +7,16 @@ import { GuestNavbar, AdminNavbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { ChevronDown } from "lucide-react";
+import { motion } from 'framer-motion';
 
 export default function Home() {
+	const scrollToFeatures = () => {
+		document.getElementById('features')?.scrollIntoView({ 
+			behavior: 'smooth',
+			block: 'start'
+		});
+	};
 	return (
 		<div className="flex flex-col min-h-screen">
 			<AdminNavbar />
@@ -33,10 +42,24 @@ export default function Home() {
 						Get Started
 					</Button>
 				</Link>
+				{/* Scroll Indicator */}
+				<motion.div 
+					className="absolute bottom-8 cursor-pointer"
+					onClick={scrollToFeatures}
+					initial={{ y: 0 }}
+					animate={{ y: [0, 10, 0] }}
+					transition={{ 
+						duration: 1.5,
+						repeat: Infinity,
+						ease: "easeInOut"
+					}}
+				>
+					<ChevronDown className="w-8 h-8 text-primary hover:text-primary/80" />
+				</motion.div>
 			</section>
 
 			{/* Features Section */}
-			<section className="py-16 md:py-24 px-6 md:px-10 bg-secondary/50">
+			<section className="py-16 md:py-24 px-6 md:px-10">
 				<div className="max-w-7xl mx-auto">
 					<h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-foreground">
 						Key Features
