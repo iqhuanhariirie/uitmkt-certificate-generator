@@ -16,14 +16,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Download } from "lucide-react";
+import { Download, ExternalLink } from "lucide-react";
 import { RingLoader } from "@/components/RingLoader";
 import Image from "next/image";
+import Link from "next/link";
 
 interface EventData {
-    id: string;
-    eventName: string;
-  }
+  id: string;
+  eventName: string;
+}
 
 export default function PublicCertificateView({
   params,
@@ -104,7 +105,7 @@ export default function PublicCertificateView({
           <CardHeader>
             <CardTitle>Certificate Unavailable</CardTitle>
             <CardDescription>
-            We couldn&apos;t find the certificate you&apos;re looking for.
+              We couldn&apos;t find the certificate you&apos;re looking for.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-4">
@@ -122,9 +123,9 @@ export default function PublicCertificateView({
       <Card className="mb-8">
         <CardHeader>
           <div className="flex flex-col items-center text-center">
-            <Image 
+            <Image
               src={uitmLogo}
-              alt="Organization Logo" 
+              alt="Organization Logo"
               className="h-16 mb-4"
             />
             <CardTitle className="text-2xl mb-2">
@@ -178,6 +179,19 @@ export default function PublicCertificateView({
 
       <div className="text-center mt-8 text-sm text-gray-500">
         <p>This certificate can be verified at our official website.</p>
+        <p><Link
+          href={`/verify?id=${certificate.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Button
+            variant="outline"
+            className="gap-2"
+          >
+            <ExternalLink className="h-4 w-4" />
+            Verify this certificate
+          </Button>
+        </Link></p>
         <p>Certificate ID: {certificate.id}</p>
       </div>
     </div>
