@@ -12,6 +12,10 @@ import {
 } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "./ui/button";
+
 
 export const LoginCard = () => {
 	const { loading } = useAuth();
@@ -40,7 +44,14 @@ export const LoginCard = () => {
 					<CardContent className="text-center">
 						<AdminLoginButton />
 					</CardContent>
-					
+					<CardFooter>
+						<Link href="/">
+							<Button variant="ghost" className="flex items-center gap-2">
+								<ArrowLeft className="h-4 w-4" />
+								Back to Welcome Page
+							</Button>
+						</Link>
+					</CardFooter>
 				</Card>
 			</>
 		);
