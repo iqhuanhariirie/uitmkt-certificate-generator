@@ -6,6 +6,24 @@ import { pdflibAddPlaceholder } from '@signpdf/placeholder-pdf-lib';
 import { PDFDocument } from 'pdf-lib';
 import { adminDb, adminStorage } from '@/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
+<<<<<<< HEAD
+=======
+import { signWithRetry } from "@/utils/signWithRetry";
+
+export const dynamic = 'force-dynamic';
+export const maxDuration = 300;
+export const runtime = 'nodejs';
+
+async function warmupOpenSSL() {
+  try {
+    const crypto = require('crypto');
+    crypto.randomBytes(32);
+    await new Promise(resolve => setTimeout(resolve, 100));
+  } catch (error) {
+    console.error('OpenSSL warmup error:', error);
+  }
+}
+>>>>>>> 97c303f (replace const config)
 
 interface RequestBody {
   certificateId: string;
@@ -103,6 +121,10 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 97c303f (replace const config)
 
 // // 3. Upload signed PDF
     // const storageRef = ref(storage, `certificates/${certificateId}.pdf`);

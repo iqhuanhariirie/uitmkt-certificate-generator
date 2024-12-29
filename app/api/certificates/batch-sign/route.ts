@@ -7,6 +7,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 import { adminDb, adminStorage } from '@/firebase/admin';
 
+
 async function processSingleCertificate(
   cert: CertificateRequest,
   p12Buffer: Buffer,
@@ -257,3 +258,13 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb'
+    },
+    responseLimit: '50mb'
+  },
+  maxDuration: 300
+};
