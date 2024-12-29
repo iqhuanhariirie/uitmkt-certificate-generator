@@ -9,7 +9,7 @@ import { adminDb, adminStorage } from '@/firebase/admin';
 import { signWithRetry } from "@/utils/signWithRetry";
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300;
+export const maxDuration = 60;
 export const runtime = 'nodejs';
 
 async function warmupOpenSSL() {
@@ -92,7 +92,7 @@ async function processChunk(
   certificates: CertificateRequest[], 
   p12Buffer: Buffer,
   p12Passphrase: string,
-  chunkSize: number = 5
+  chunkSize: number = 2
 ): Promise<BatchResults> {
   const results: BatchResults = { success: 0, failed: 0, errors: [] };
   
@@ -121,7 +121,7 @@ async function processChunk(
 
     // Add a small delay between chunks to prevent overload
     if (i + chunkSize < certificates.length) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
   }
 
@@ -195,71 +195,8 @@ export async function POST(request: NextRequest) {
       certificates, 
       p12Buffer, 
       process.env.P12_PASSPHRASE,
-      5 // chunk size
+      2 // chunk size
     );
-
-    for (const cert of certificates) {
-      try {
-        const { certificateId, pdfBytes } = cert;
-        const pdfBuffer = new Uint8Array(pdfBytes);
-
-        const pdfDoc = await PDFDocument.load(pdfBuffer);
-        pdfDoc.setTitle(certificateId);
-        await pdflibAddPlaceholder({
-          pdfDoc,
-          reason: 'Certificate Validation',
-          contactInfo: 'uitm.kppim@uitm.edu.my',
-          name: 'UITM KT CDCS230',
-          location: 'Kuala Terengganu',
-          signatureLength: 3322,
-          subFilter: 'adbe.pkcs7.detached'
-        });
-
-        const pdfBytesWithPlaceholder = await pdfDoc.save();
-
-        const p12Buffer = Buffer.from(process.env.P12_CERTIFICATE, 'base64');
-        const signer = new P12Signer(p12Buffer, {
-          passphrase: process.env.P12_PASSPHRASE
-        });
-
-        const signPdf = new SignPdf();
-        const signedPdf = await signWithRetry(
-          Buffer.from(pdfBytesWithPlaceholder),
-          signer
-        );
-
-        const bucket = adminStorage.bucket();
-        const file = bucket.file(`certificates/${certificateId}.pdf`);
-        await file.save(signedPdf);
-        const [signedPdfUrl] = await file.getSignedUrl({
-          action: 'read',
-          expires: '03-01-2500'
-        });
-
-        await adminDb.collection('certificates').doc(certificateId).update({
-          status: 'signed',
-          signedPdfUrl,
-          signedAt: Timestamp.now()
-        });
-
-        results.success++;
-      } catch (error) {
-        results.failed++;
-        results.errors.push({
-          certificateId: cert.certificateId,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        });
-
-        try {
-          await adminDb.collection('certificates').doc(cert.certificateId).update({
-            status: 'error',
-            errorMessage: error instanceof Error ? error.message : 'Unknown error'
-          });
-        } catch (updateError) {
-          console.error('Failed to update certificate error status:', updateError);
-        }
-      }
-    }
 
     return NextResponse.json(results);
   } catch (error) {

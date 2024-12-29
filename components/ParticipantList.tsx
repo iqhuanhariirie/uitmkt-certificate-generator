@@ -134,7 +134,7 @@ export function ParticipantList({ eventId }: { eventId: string }) {
         generateCertificatePDF,
         (current, total) => {
           toast.loading(
-            `Processing batch ${current}/${total}...`,
+            `Processing batch ${current}/${total} (${Math.round((current/total) * 100)}%)`,
             { id: toastId }
           );
         }
