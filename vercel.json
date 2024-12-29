@@ -3,9 +3,10 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "functions": {
-    "api/**/*": {
+    "app/api/**/*": {
       "memory": 1024,
-      "maxDuration": 60
+      "maxDuration": 60,
+      "runtime": "nodejs20.x"
     }
   },
   "env": {
