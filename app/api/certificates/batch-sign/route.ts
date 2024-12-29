@@ -184,6 +184,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No certificates provided' }, { status: 400 });
     }
 
+    if (certificates.length > 5) { // Limit batch size
+      return NextResponse.json({ 
+        error: 'Batch size too large. Maximum 5 certificates per request.' 
+      }, { status: 413 });
+    }
+
     if (!process.env.P12_CERTIFICATE || !process.env.P12_PASSPHRASE) {
       throw new Error('Missing P12 certificate configuration');
     }

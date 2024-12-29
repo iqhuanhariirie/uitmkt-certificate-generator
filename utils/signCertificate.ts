@@ -38,7 +38,7 @@ export async function batchSignCertificates(
   generatePDF: (cert: any) => Promise<Uint8Array>,
   onProgress?: (current: number, total: number) => void
 ) {
-  const BATCH_SIZE = 10; // Total certificates per API call
+  const BATCH_SIZE = 2; // Total certificates per API call
   const results = {
     totalSuccess: 0,
     totalFailed: 0,
