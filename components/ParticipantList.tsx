@@ -119,6 +119,13 @@ export function ParticipantList({ eventId }: { eventId: string }) {
     );
   
     try {
+      // Call warmup endpoint first
+    await fetch('/api/warmup');
+    
+    // Wait a bit for the instance to be ready
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    const pendingCertificates = participants.filter(p => p.status === 'pending');
       const idToken = await user.getIdToken();
       
       const result = await batchSignCertificates(

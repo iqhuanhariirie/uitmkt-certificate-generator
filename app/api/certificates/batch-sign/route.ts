@@ -6,6 +6,7 @@ import { PDFDocument } from 'pdf-lib';
 import { Timestamp } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 import { adminDb, adminStorage } from '@/firebase/admin';
+import { signWithRetry } from "@/utils/signWithRetry";
 
 interface CertificateRequest {
   certificateId: string;
@@ -92,7 +93,7 @@ export async function POST(request: NextRequest) {
         });
 
         const signPdf = new SignPdf();
-        const signedPdf = await signPdf.sign(
+        const signedPdf = await signWithRetry(
           Buffer.from(pdfBytesWithPlaceholder),
           signer
         );

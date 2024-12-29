@@ -6,6 +6,7 @@ import { pdflibAddPlaceholder } from '@signpdf/placeholder-pdf-lib';
 import { PDFDocument } from 'pdf-lib';
 import { adminDb, adminStorage } from '@/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { signWithRetry } from "@/utils/signWithRetry";
 
 interface RequestBody {
   certificateId: string;
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
     console.log('Signer created');
 
     const signPdf = new SignPdf();
-    const signedPdf = await signPdf.sign(
+    const signedPdf = await signWithRetry(
       Buffer.from(pdfBytesWithPlaceholder),
       signer
     );
