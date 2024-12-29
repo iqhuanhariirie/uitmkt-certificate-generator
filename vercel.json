@@ -4,10 +4,29 @@
   "framework": "nextjs",
   "functions": {
     "app/api/**/*": {
-      "memory": 1024,
-      "maxDuration": 60
+      "memory": 3008,
+      "maxDuration": 300
     }
   },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET,POST,OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
+    }
+  ],
   "env": {
     "NODE_OPTIONS": "--openssl-legacy-provider"
   }

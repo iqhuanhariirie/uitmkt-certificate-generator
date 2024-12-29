@@ -8,12 +8,23 @@ import { adminDb, adminStorage } from '@/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { signWithRetry } from "@/utils/signWithRetry";
 
+async function warmupOpenSSL() {
+  try {
+    const crypto = require('crypto');
+    crypto.randomBytes(32);
+    await new Promise(resolve => setTimeout(resolve, 100));
+  } catch (error) {
+    console.error('OpenSSL warmup error:', error);
+  }
+}
+
 interface RequestBody {
   certificateId: string;
   pdfBase64: string;
 }
 
 export async function POST(request: NextRequest) {
+  await warmupOpenSSL();
   try {
     const body = await request.json() as RequestBody;
     const { certificateId, pdfBase64 } = body;
@@ -104,6 +115,15 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb'
+    },
+    responseLimit: '50mb'
+  },
+  maxDuration: 300
+};
 
 // // 3. Upload signed PDF
     // const storageRef = ref(storage, `certificates/${certificateId}.pdf`);

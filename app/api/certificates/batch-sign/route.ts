@@ -8,6 +8,16 @@ import { getAuth } from 'firebase-admin/auth';
 import { adminDb, adminStorage } from '@/firebase/admin';
 import { signWithRetry } from "@/utils/signWithRetry";
 
+async function warmupOpenSSL() {
+  try {
+    const crypto = require('crypto');
+    crypto.randomBytes(32);
+    await new Promise(resolve => setTimeout(resolve, 100));
+  } catch (error) {
+    console.error('OpenSSL warmup error:', error);
+  }
+}
+
 interface CertificateRequest {
   certificateId: string;
   pdfBytes: number[];
@@ -25,6 +35,7 @@ interface BatchResults {
 }
 
 export async function POST(request: NextRequest) {
+  await warmupOpenSSL();
   try {
     // Log headers for debugging
     console.log("Received headers:", Object.fromEntries(request.headers));
@@ -143,3 +154,13 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb'
+    },
+    responseLimit: '50mb'
+  },
+  maxDuration: 300
+};
