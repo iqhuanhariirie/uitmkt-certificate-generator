@@ -8,6 +8,10 @@ import { getAuth } from 'firebase-admin/auth';
 import { adminDb, adminStorage } from '@/firebase/admin';
 import { signWithRetry } from "@/utils/signWithRetry";
 
+export const dynamic = 'force-dynamic';
+export const maxDuration = 300;
+export const runtime = 'nodejs';
+
 async function warmupOpenSSL() {
   try {
     const crypto = require('crypto');
@@ -269,13 +273,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '50mb'
-    },
-    responseLimit: '50mb'
-  },
-  maxDuration: 300
-};
