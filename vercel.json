@@ -2,6 +2,11 @@
   "buildCommand": "npm run build",
   "installCommand": "npm install",
   "framework": "nextjs",
+  "functions": {
+    "api/**/*": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "env": {
     "NODE_OPTIONS": "--openssl-legacy-provider"
   }
