@@ -19,7 +19,22 @@ interface DistributeCertificatesProps {
   onSuccess?: () => void;
   onRefresh?: () => Promise<void>;
 }
+interface EmailResult {
+  email: string;
+  success: boolean;
+  error?: string;
+}
 
+interface EmailResponse {
+  success: boolean;
+  results: EmailResult[];
+  summary?: {
+    total: number;
+    successful: number;
+    failed: number;
+  };
+  error?: string;
+}
 export function DistributeCertificates({
   selectedParticipants,
   eventName,
@@ -28,6 +43,7 @@ export function DistributeCertificates({
 }: DistributeCertificatesProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDistributing, setIsDistributing] = useState(false);
+  const [progress, setProgress] = useState({ sent: 0, total: 0 });
 
   // Filter out unsigned certificates
   const signedParticipants = selectedParticipants.filter(p => p.status === 'signed');
@@ -40,6 +56,7 @@ export function DistributeCertificates({
       `Sending certificates to ${signedParticipants.length} participants...`
     );
     setIsDistributing(true);
+    setProgress({ sent: 0, total: signedParticipants.length });
 
     try {
       const recipients = signedParticipants.map(participant => ({
@@ -57,14 +74,14 @@ export function DistributeCertificates({
         body: JSON.stringify({ recipients })
       });
 
-      const result = await response.json();
+      const result = await response.json() as EmailResponse;
 
       if (!result.success) {
-        throw new Error(result.error);
+        throw new Error(result.error || 'Failed to send emails');
       }
 
-      const successCount = result.results.filter((r: any) => r.success).length;
-      const failureCount = result.results.filter((r: any) => !r.success).length;
+      const successCount = result.summary?.successful || 0;
+      const failureCount = result.summary?.failed || 0;
 
       if (failureCount > 0) {
         toast.error(`Failed to send ${failureCount} emails`, { id: toastId });
@@ -76,17 +93,18 @@ export function DistributeCertificates({
       onSuccess?.();
     } catch (error) {
       console.error('Error distributing certificates:', error);
-      toast.error('Failed to distribute certificates', { id: toastId });
+      toast.error(error instanceof Error ? error.message : 'Failed to distribute certificates', { id: toastId });
     } finally {
       setIsDistributing(false);
+      setProgress({ sent: 0, total: 0 });
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           disabled={selectedParticipants.length === 0 || signedParticipants.length === 0}
         >
           <Mail className="mr-2 h-4 w-4" />
@@ -100,7 +118,7 @@ export function DistributeCertificates({
             Send certificate access links to {signedParticipants.length} participants via email.
           </DialogDescription>
         </DialogHeader>
-        
+
         {unsignedParticipants.length > 0 && (
           <div className="rounded-md bg-red-50 p-4 mb-4">
             <div className="flex">
@@ -130,7 +148,7 @@ export function DistributeCertificates({
               </ul>
             </>
           )}
-          
+
           {unsignedParticipants.length > 0 && (
             <>
               <h3 className="font-medium mt-4 mb-2 text-sm text-red-600">

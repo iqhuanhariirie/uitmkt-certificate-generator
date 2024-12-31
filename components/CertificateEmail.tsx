@@ -30,13 +30,13 @@ import {
                 Your Certificate is Ready
               </Heading>
               <Text className="text-black text-[14px] leading-[24px]">
-                Hello {recipientName},
+                Dear Participant,
               </Text>
               <Text className="text-black text-[14px] leading-[24px]">
                 Your certificate for <strong>{eventName}</strong> has been issued and is now available.
               </Text>
               <Text className="text-black text-[14px] leading-[24px]">
-                You can view and download your certificate using the link below:
+                You can view and download your certificate by logging into your account:
               </Text>
               <Text className="text-blue-600 text-center my-[32px]">
                 <Link
