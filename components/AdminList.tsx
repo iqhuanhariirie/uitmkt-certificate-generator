@@ -3,6 +3,8 @@ import { db } from "@/firebase/config";
 import { useAuth } from "@/context/AuthContext";
 import { collection, deleteDoc, doc, onSnapshot } from "firebase/firestore";
 import { useEffect, useState } from "react";
+import { UserCog, Trash2 } from "lucide-react";
+import { Button } from "./ui/button";
 
 type Admin = {
   id: string;
@@ -46,33 +48,56 @@ export const AdminList = () => {
   }
 
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-bold mb-4">Current Admins</h2>
-      <div className="bg-white shadow overflow-hidden rounded-md">
-        <ul className="divide-y divide-gray-200">
-          {admins.map((admin) => (
-            <li key={admin.id} className="px-6 py-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-900">{admin.email}</p>
-                <p className="text-sm text-gray-500">
-                  Role: {admin.role}
-                </p>
-                <p className="text-sm text-gray-500">
-                  Added: {admin.createdAt?.toLocaleDateString()}
-                </p>
-              </div>
-              {admin.role !== 'super_admin' && (
-                <button
-                  onClick={() => handleRemoveAdmin(admin.id)}
-                  className="text-red-600 hover:text-red-900"
-                >
-                  Remove
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
+    <div className="mt-8 space-y-4">
+      <div className="flex items-center gap-2">
+        <UserCog className="h-6 w-6" />
+        <h2 className="text-2xl font-bold">Current Admins</h2>
       </div>
+      
+      <div className="border rounded-lg divide-y divide-border">
+        {admins.map((admin) => (
+          <div 
+            key={admin.id} 
+            className="p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
+          >
+            <div className="space-y-1">
+              <p className="font-medium">{admin.email}</p>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className={`
+                  inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                  ${admin.role === 'super_admin' 
+                    ? 'bg-primary/10 text-primary'
+                    : 'bg-secondary/10 text-secondary-foreground'
+                  }
+                `}>
+                  {admin.role}
+                </span>
+                <span className="text-muted-foreground">•</span>
+                <span>
+                  Added {admin.createdAt?.toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+
+            {admin.role !== 'super_admin' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleRemoveAdmin(admin.id)}
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {admins.length === 0 && (
+        <div className="text-center py-8 text-muted-foreground">
+          No admins found
+        </div>
+      )}
     </div>
   );
 };
