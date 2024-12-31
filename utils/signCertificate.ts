@@ -38,55 +38,72 @@ export async function batchSignCertificates(
   generatePDF: (cert: any) => Promise<Uint8Array>,
   onProgress?: (current: number, total: number) => void
 ) {
+<<<<<<< HEAD
   const batchSize = 2;
   const certificateBatches = [];
+=======
+  const BATCH_SIZE = 10; // Total certificates per API call
+  const results = {
+    totalSuccess: 0,
+    totalFailed: 0,
+    errors: [] as any[]
+  };
+>>>>>>> fd69340 (max duration 60)
 
-  // Prepare batches
-  for (let i = 0; i < certificates.length; i += batchSize) {
-    const batch = certificates.slice(i, i + batchSize);
-    
-    // Generate PDFs for the batch
-    const batchData = await Promise.all(
-      batch.map(async (cert) => ({
-        certificateId: cert.id,
-        pdfBytes: Array.from(await generatePDF(cert))
-      }))
-    );
-
-    certificateBatches.push(batchData);
+  // Split certificates into smaller batches
+  const batches = [];
+  for (let i = 0; i < certificates.length; i += BATCH_SIZE) {
+    batches.push(certificates.slice(i, i + BATCH_SIZE));
   }
-
-  let totalSuccess = 0;
-  let totalFailed = 0;
 
   // Process each batch
-  for (let i = 0; i < certificateBatches.length; i++) {
-    const batch = certificateBatches[i];
+  for (let i = 0; i < batches.length; i++) {
+    const batch = batches[i];
     
-    // Report progress if callback provided
     if (onProgress) {
-      onProgress(i + 1, certificateBatches.length);
+      onProgress(i + 1, batches.length);
     }
 
-    const response = await fetch('/api/certificates/batch-sign', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${idToken}`
-      },
-      body: JSON.stringify({ certificates: batch })
-    });
+    try {
+      // Generate PDFs for the current batch
+      const batchData = await Promise.all(
+        batch.map(async (cert) => ({
+          certificateId: cert.id,
+          pdfBytes: Array.from(await generatePDF(cert))
+        }))
+      );
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to process batch');
+      const response = await fetch('/api/certificates/batch-sign', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ certificates: batchData })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to process batch');
+      }
+
+      const result = await response.json();
+      results.totalSuccess += result.success;
+      results.totalFailed += result.failed;
+      if (result.errors) {
+        results.errors.push(...result.errors);
+      }
+
+      // Add delay between batches
+      if (i < batches.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    } catch (error) {
+      console.error(`Error processing batch ${i + 1}:`, error);
+      results.totalFailed += batch.length;
     }
-
-    const result = await response.json();
-    totalSuccess += result.success;
-    totalFailed += result.failed;
   }
 
-  return { totalSuccess, totalFailed };
+  return results;
 }
 

@@ -6,7 +6,21 @@ import { PDFDocument } from 'pdf-lib';
 import { Timestamp } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 import { adminDb, adminStorage } from '@/firebase/admin';
+import { signWithRetry } from "@/utils/signWithRetry";
 
+export const dynamic = 'force-dynamic';
+export const maxDuration = 300;
+export const runtime = 'nodejs';
+
+async function warmupOpenSSL() {
+  try {
+    const crypto = require('crypto');
+    crypto.randomBytes(32);
+    await new Promise(resolve => setTimeout(resolve, 100));
+  } catch (error) {
+    console.error('OpenSSL warmup error:', error);
+  }
+}
 
 async function processSingleCertificate(
   cert: CertificateRequest,
@@ -78,7 +92,7 @@ async function processChunk(
   certificates: CertificateRequest[], 
   p12Buffer: Buffer,
   p12Passphrase: string,
-  chunkSize: number = 5
+  chunkSize: number = 2
 ): Promise<BatchResults> {
   const results: BatchResults = { success: 0, failed: 0, errors: [] };
   
@@ -107,7 +121,7 @@ async function processChunk(
 
     // Add a small delay between chunks to prevent overload
     if (i + chunkSize < certificates.length) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
   }
 
@@ -180,7 +194,7 @@ export async function POST(request: NextRequest) {
       certificates, 
       p12Buffer, 
       process.env.P12_PASSPHRASE,
-      5 // chunk size
+      2 // chunk size
     );
 
     for (const cert of certificates) {
@@ -208,7 +222,7 @@ export async function POST(request: NextRequest) {
         });
 
         const signPdf = new SignPdf();
-        const signedPdf = await signPdf.sign(
+        const signedPdf = await signWithRetry(
           Buffer.from(pdfBytesWithPlaceholder),
           signer
         );
