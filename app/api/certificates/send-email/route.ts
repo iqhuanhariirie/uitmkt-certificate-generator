@@ -46,9 +46,9 @@ export async function POST(request: Request) {
           to: batch.map((r: EmailRecipient) => r.email),
           subject: `Your Certificate for ${batch[0].eventName} is Ready`,
           react: CertificateEmail({
-            recipientName: "Participant",
+            recipientName: batch[0].guestName,
             eventName: batch[0].eventName,
-            certificateUrl: process.env.NEXT_PUBLIC_SITE_URL + "/certificates"
+            certificateUrl: batch[0].certificateUrl
           }),
           bcc: batch.map((r: EmailRecipient) => r.email)
         });
