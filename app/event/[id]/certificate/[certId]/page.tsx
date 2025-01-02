@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Worker, Viewer } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import { toast } from 'react-hot-toast';
 import {
   Card,
   CardContent,
@@ -15,6 +16,53 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+
+interface DownloadButtonProps {
+  url: string;
+  filename: string;
+}
+const DownloadButton: React.FC<DownloadButtonProps> = ({ url, filename }) => {
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const downloadCertificate = async () => {
+    setIsDownloading(true);
+    const toastId = toast.loading('Downloading certificate...');
+
+    try {
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error('Download failed');
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+      
+      toast.success('Download completed', { id: toastId });
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast.error('Failed to download certificate', { id: toastId });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  return (
+    <Button
+      onClick={downloadCertificate}
+      disabled={isDownloading}
+    >
+      {isDownloading ? 'Downloading...' : 'Download Certificate'}
+    </Button>
+  );
+};
 
 export default function ViewCertificatePage({
   params,
@@ -120,11 +168,10 @@ export default function ViewCertificatePage({
                 Back to List
               </Button>
               {certificate.status === "signed" && certificate.signedPdfUrl && (
-                <Button
-                  onClick={() => window.open(certificate.signedPdfUrl!, "_blank")}
-                >
-                  Download Certificate
-                </Button>
+                <DownloadButton 
+                url={certificate.signedPdfUrl} 
+                filename={`${certificate.guestName}-certificate.pdf`}
+              />
               )}
             </div>
           </div>
