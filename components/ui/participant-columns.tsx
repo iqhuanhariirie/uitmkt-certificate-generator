@@ -50,20 +50,67 @@ export type Participant = {
         fontSize: number;
     };
 };
+interface DownloadButtonProps {
+    url: string;
+    filename: string;
+}
 
+const DownloadButton: React.FC<DownloadButtonProps> = ({ url, filename }) => {
+    const [isDownloading, setIsDownloading] = useState(false);
+
+    const downloadCertificate = async () => {
+        setIsDownloading(true);
+        const toastId = toast.loading('Downloading certificate...');
+
+        try {
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error('Download failed');
+            }
+
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+
+            toast.success('Download completed', { id: toastId });
+        } catch (error) {
+            console.error('Download failed:', error);
+            toast.error('Failed to download certificate', { id: toastId });
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+
+    return (
+        <button
+            onClick={downloadCertificate}
+            disabled={isDownloading}
+            className="w-full text-left cursor-pointer disabled:cursor-not-allowed"
+        >
+            {isDownloading ? 'Downloading...' : 'Download Certificate'}
+        </button>
+    );
+};
 const StatusCell = ({ participant }: { participant: Participant }) => {
     const [status, setStatus] = useState(participant.status);
     return (
-      <div className={`
+        <div className={`
         px-2 py-1 rounded-full text-xs font-medium text-center
         ${status === 'signed' ? 'bg-green-100 text-green-800' : ''}
         ${status === 'pending' ? 'bg-yellow-100 text-yellow-800' : ''}
         ${status === 'error' ? 'bg-red-100 text-red-800' : ''}
       `}>
-        {status}
-      </div>
+            {status}
+        </div>
     );
-  };
+};
 
 interface ActionsCellProps extends CellContext<Participant, any> {
     onRefresh?: () => Promise<void>;
@@ -156,14 +203,10 @@ const ActionCell = (props: ActionsCellProps) => {
                     )}
                     {status === 'signed' && signedUrl && (
                         <DropdownMenuItem>
-                            <a
-                                href={signedUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="cursor-pointer"
-                            >
-                                Download Certificate
-                            </a>
+                            <DownloadButton
+                                url={signedUrl}
+                                filename={`${participant.guestName}-certificate.pdf`}
+                            />
                         </DropdownMenuItem>
                     )}
                     {status === 'error' && (
@@ -215,28 +258,28 @@ const ActionCell = (props: ActionsCellProps) => {
 // Add a new type for selected items
 export type SelectedCertificates = {
     [key: string]: boolean;
-  };
+};
 
 export const participantColumns: ColumnDef<Participant>[] = [
     {
         id: "select",
         header: ({ table }) => (
-          <Checkbox
-            checked={table.getIsAllPageRowsSelected()}
-            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Select all"
-          />
+            <Checkbox
+                checked={table.getIsAllPageRowsSelected()}
+                onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                aria-label="Select all"
+            />
         ),
         cell: ({ row }) => (
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Select row"
-          />
+            <Checkbox
+                checked={row.getIsSelected()}
+                onCheckedChange={(value) => row.toggleSelected(!!value)}
+                aria-label="Select row"
+            />
         ),
         enableSorting: false,
         enableHiding: false,
-      },
+    },
     {
         accessorKey: "guestName",
         header: "Name",
