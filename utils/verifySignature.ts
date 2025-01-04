@@ -1,7 +1,6 @@
 import { PDFDocument, PDFName } from 'pdf-lib';
 import { Certificate } from '@/utils/uploadToFirestore';
 
-// utils/verifySignature.ts
 export async function verifySignature(pdfBuffer: ArrayBuffer): Promise<{
   isValid: boolean;
   signatureInfo?: any;
@@ -10,6 +9,8 @@ export async function verifySignature(pdfBuffer: ArrayBuffer): Promise<{
 }> {
   try {
     const errors: string[] = [];
+
+    //Load PDF document
     const pdfDoc = await PDFDocument.load(pdfBuffer);
     
     // Get signature fields

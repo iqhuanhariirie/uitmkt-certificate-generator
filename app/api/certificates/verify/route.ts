@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 2. Only check database if we have a valid certificate ID format
+    // 2. Only check database if a valid certificate ID format exists
     const certificateRef = adminDb.collection('certificates').doc(signatureVerification.certificateId);
     const certificateDoc = await certificateRef.get();
 
