@@ -6,9 +6,10 @@ interface Certificate {
 
 export async function signCertificate(certificate: Certificate, pdfBytes: Uint8Array) {
   try {
-    // Convert Uint8Array to base64 string for transmission
+    // Convert PDF to base64 for transmission
     const base64Pdf = Buffer.from(pdfBytes).toString('base64');
 
+    // Send to signing endpoint
     const response = await fetch('/api/certificates/sign', {
       method: 'POST',
       headers: {
