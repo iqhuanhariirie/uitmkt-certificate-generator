@@ -23,7 +23,7 @@ export default function ProtectedRoute({
     }
 
     if (!loading && requireAdmin && user && !checkIfUserIsAdmin(user)) {
-      router.push('/unauthorized'); // Create this page for unauthorized access
+      router.push('/unauthorized'); 
     }
   }, [user, loading, router, requireAdmin, checkIfUserIsAdmin]);
 

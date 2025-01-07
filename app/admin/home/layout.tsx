@@ -17,9 +17,12 @@ const Layout = ({ children }: { children: ReactNode }) => {
   }, [user, router]);
   return (
     <>
-      <div className="h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col">
         <AdminNavbar />
+        <main className="flex-grow">
         <EventDataContextProvider>{children}</EventDataContextProvider>
+        </main>
+        
         <Footer />
       </div>
     </>

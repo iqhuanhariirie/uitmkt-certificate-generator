@@ -7,8 +7,8 @@ import { Toaster } from 'react-hot-toast';
 const Layout = ({ children }: { children: ReactNode }) => {
   return (
     <>
-      
-      <div className="h-screen flex flex-col">
+
+      <div className="min-h-screen flex flex-col">
         <AdminNavbar />
         {children}
         <Footer />

@@ -50,13 +50,13 @@ export function DataTable<TData, TValue>({
   });
   if (loading) {
     return (
-      <div className="h-full w-full flex items-center justify-center">
+      <div className="min-h-[calc(100vh-200px)] flex items-center justify-center">
         <RingLoader />
       </div>
     );
   } else {
     return (
-      <div>
+      <div className="p-4">
         <div className="flex justify-between py-4">
           <Input
             placeholder="Filter by event name..."
@@ -68,7 +68,7 @@ export function DataTable<TData, TValue>({
           />
           <AddEvent />
         </div>
-        <div className="rounded-md border">
+        <div className="rounded-md border overflow-x-auto">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

@@ -18,7 +18,7 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { useAuth } from "@/context/AuthContext";
-import { ChevronDown, Moon, Sun, Settings, Users } from "lucide-react";
+import { ChevronDown, Moon, Sun, Settings, Users, LogOut, LogIn } from "lucide-react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -39,19 +39,19 @@ export const AdminNavbar = () => {
         <NavigationMenu>
           <NavigationMenuList>
             <NavigationMenuItem>
-              <Link href="/admin/home" legacyBehavior passHref>
+              <Link href="/" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   Home
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
-            {/* <NavigationMenuItem>
+            <NavigationMenuItem>
                 <Link href="/admin/home" legacyBehavior passHref>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                     Event
                   </NavigationMenuLink>
                 </Link>
-              </NavigationMenuItem> */}
+              </NavigationMenuItem>
             <NavigationMenuItem>
               <Link href="/docs" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
@@ -101,7 +101,7 @@ export const AdminNavbar = () => {
       <div className="flex gap-1">
         <Avatar>
           {user ? (
-            <AvatarImage src={user.photoURL || undefined} alt="@blurridge" />
+            <AvatarImage src={user.photoURL || undefined} alt="guest" />
           ) : (
             <AvatarFallback>G</AvatarFallback>
           )}
@@ -113,16 +113,32 @@ export const AdminNavbar = () => {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-          {user && checkIfUserIsSuperAdmin(user) && (
-              <DropdownMenuItem>
-                <Link href="/admin/manage" className="flex items-center">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Admin Settings
-                </Link>
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem onClick={logOut}>Logout</DropdownMenuItem>
-          </DropdownMenuContent>
+      {user ? (
+        // Logged in user menu items
+        <>
+          {checkIfUserIsSuperAdmin(user) && (
+            <DropdownMenuItem>
+              <Link href="/admin/manage" className="flex items-center">
+                <Settings className="w-4 h-4 mr-2" />
+                Admin Settings
+              </Link>
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem onClick={logOut}>
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </DropdownMenuItem>
+        </>
+      ) : (
+        // Guest menu items
+        <DropdownMenuItem>
+          <Link href="admin/login" className="flex items-center">
+            <LogIn className="w-4 h-4 mr-2" />
+            Login
+          </Link>
+        </DropdownMenuItem>
+      )}
+    </DropdownMenuContent>
         </DropdownMenu>
       </div>
     </nav>
