@@ -16,7 +16,7 @@ interface EmailResult {
 }
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const BATCH_SIZE = 50;
+const BATCH_SIZE = 2;
 
 function chunkArray<T>(array: T[], size: number): T[][] {
   return Array.from(
