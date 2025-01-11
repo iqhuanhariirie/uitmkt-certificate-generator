@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Worker, Viewer } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
 import uitmLogo from "@/assets/UiTM Logo Vector.svg";
+import { toast } from 'react-hot-toast';
 import {
   Card,
   CardContent,
@@ -25,6 +26,55 @@ interface EventData {
   id: string;
   eventName: string;
 }
+interface DownloadButtonProps {
+  url: string;
+  filename: string;
+}
+
+const DownloadButton: React.FC<DownloadButtonProps> = ({ url, filename }) => {
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const downloadCertificate = async () => {
+    setIsDownloading(true);
+    const toastId = toast.loading('Downloading certificate...');
+
+    try {
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error('Download failed');
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+      
+      toast.success('Download completed', { id: toastId });
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast.error('Failed to download certificate', { id: toastId });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  return (
+    <Button
+      className="w-full md:w-auto"
+      onClick={downloadCertificate}
+      disabled={isDownloading}
+    >
+      <Download className="mr-2 h-4 w-4" />
+      {isDownloading ? 'Downloading...' : 'Download Certificate'}
+    </Button>
+  );
+};
 
 export default function PublicCertificateView({
   params,
@@ -151,13 +201,12 @@ export default function PublicCertificateView({
           </div>
 
           <div className="flex justify-center mt-4">
-            <Button
-              className="w-full md:w-auto"
-              onClick={() => window.open(certificate.signedPdfUrl!, "_blank")}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Download Certificate
-            </Button>
+            {certificate && certificate.signedPdfUrl && (
+              <DownloadButton 
+                url={certificate.signedPdfUrl}
+                filename={`${certificate.guestName}-certificate.pdf`}
+              />
+            )}
           </div>
         </CardContent>
       </Card>
