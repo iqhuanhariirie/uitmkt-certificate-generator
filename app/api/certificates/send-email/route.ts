@@ -26,7 +26,10 @@ function chunkArray<T>(array: T[], size: number): T[][] {
 }
 
 export async function POST(request: Request) {
-  if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) {
+  const emailFrom = process.env.EMAIL_FROM;
+  const resendApiKey = process.env.RESEND_API_KEY;
+
+  if (!resendApiKey || !emailFrom) {
     return NextResponse.json(
       { success: false, error: 'Email configuration missing' },
       { status: 500 }
@@ -41,17 +44,22 @@ export async function POST(request: Request) {
 
     for (const batch of batches) {
       try {
-        await resend.emails.send({
-          from: process.env.EMAIL_FROM,
-          to: batch.map((r: EmailRecipient) => r.email),
-          subject: `Your Certificate for ${batch[0].eventName} is Ready`,
-          react: CertificateEmail({
-            recipientName: batch[0].guestName,
-            eventName: batch[0].eventName,
-            certificateUrl: batch[0].certificateUrl
-          }),
-          bcc: batch.map((r: EmailRecipient) => r.email)
+        // Create personalized email content for each recipient
+        const emailPromises = batch.map(async (recipient) => {
+          return resend.emails.send({
+            from: emailFrom,
+            to: recipient.email,
+            subject: `Your Certificate for ${recipient.eventName} is Ready`,
+            react: CertificateEmail({
+              recipientName: recipient.guestName,
+              eventName: recipient.eventName,
+              certificateUrl: recipient.certificateUrl
+            })
+          });
         });
+
+        // Send emails in parallel within the batch
+        await Promise.all(emailPromises);
 
         results.push(
           ...batch.map((recipient: EmailRecipient) => ({
