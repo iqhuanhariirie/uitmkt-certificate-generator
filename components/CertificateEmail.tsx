@@ -8,6 +8,7 @@ import {
   Text,
 } from '@react-email/components';
 import { Tailwind } from '@react-email/tailwind';
+import { Participant } from './ui/participant-columns';
 
 interface CertificateEmailProps {
   recipientName: string;
@@ -30,7 +31,7 @@ export default function CertificateEmail({
               Your Certificate is Ready
             </Heading>
             <Text className="text-black text-[14px] leading-[24px]">
-              Dear {recipientName},
+              Dear Participant,
             </Text>
             <Text className="text-black text-[14px] leading-[24px]">
               Your certificate for <strong>{eventName}</strong> has been issued and is now available.
