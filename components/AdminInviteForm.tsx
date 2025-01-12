@@ -103,6 +103,14 @@ export const AdminInviteForm = () => {
                             className="w-full"
                             classNamePrefix="select"
                             isSearchable={false}
+                            styles={{
+                                option: (baseStyles, state) => ({
+                                    ...baseStyles,
+                                    
+                                    color: 'hsl(222.2 84% 4.9%)', // Force dark text color
+                                    
+                                }),
+                            }}
                             theme={(theme) => ({
                                 ...theme,
                                 colors: {
