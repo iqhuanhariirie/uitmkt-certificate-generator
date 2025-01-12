@@ -313,10 +313,33 @@ export const participantColumns: ColumnDef<Participant>[] = [
     },
     {
         accessorKey: "status",
-        header: () => <div className="text-center">Status</div>,
+        header: ({ column }) => {
+            return (
+                <div className="text-center cursor-pointer" onClick={() => column.toggleSorting()}>
+                    Status
+                    {/* Optional: Add sort direction indicator */}
+                    {column.getIsSorted() && (
+                        <span className="ml-2">
+                            {column.getIsSorted() === "asc" ? "↑" : "↓"}
+                        </span>
+                    )}
+                </div>
+            );
+        },
         cell: ({ row }) => {
             const participant = row.original;
             return <StatusCell participant={participant} />;
+        },
+        sortingFn: (rowA, rowB) => {
+            // Custom sorting function that prioritizes 'pending' over 'signed'
+            const statusOrder = {
+                pending: 0,
+                signed: 1,
+                error: 2
+            };
+            const statusA = rowA.original.status;
+            const statusB = rowB.original.status;
+            return statusOrder[statusA] - statusOrder[statusB];
         }
     },
     {
