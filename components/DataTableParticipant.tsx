@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/table";
 
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { BulkActions } from '@/components/BulkActions';
 import { Participant } from "./ui/participant-columns";
 import { DistributeCertificates } from './DistributeCertificates';
@@ -72,6 +72,7 @@ export function DataTable<TData, TValue>({
         }
         return col;
     });
+    const tableKey = useMemo(() => JSON.stringify(data), [data]);
 
     const table = useReactTable({
         data,
@@ -92,7 +93,7 @@ export function DataTable<TData, TValue>({
     });
 
     return (
-        <div>
+        <div key={tableKey}>
             <div className="flex items-center justify-between py-4">
                 <DistributeCertificates
                     selectedParticipants={table.getSelectedRowModel().rows.map(row => row.original)}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { collection, query, where, getDocs, getDoc, doc } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { DataTable } from "@/components/DataTableParticipant";
@@ -68,11 +68,19 @@ export function ParticipantList({ eventId }: { eventId: string }) {
     fetchParticipants();
   }, [fetchParticipants]);
 
-  const filteredParticipants = participants.filter(participant =>
-    participant.guestName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    participant.studentID.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    participant.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredParticipants = useMemo(() => {
+    const filtered = participants.filter(participant =>
+        participant.guestName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        participant.studentID.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        participant.email.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    // Create new participant objects to force re-render
+    return filtered.map(participant => ({
+        ...participant,
+        key: `${participant.id}-${participant.status}-${Date.now()}`
+    }));
+}, [participants, searchQuery]);
 
   const downloadParticipantsList = () => {
     try {

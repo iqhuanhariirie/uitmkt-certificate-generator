@@ -99,15 +99,16 @@ const DownloadButton: React.FC<DownloadButtonProps> = ({ url, filename }) => {
     );
 };
 const StatusCell = ({ participant }: { participant: Participant }) => {
-    const [status, setStatus] = useState(participant.status);
     return (
-        <div className={`
+        <div 
+        key={`status-${participant.id}-${participant.status}`}
+        className={`
         px-2 py-1 rounded-full text-xs font-medium text-center
-        ${status === 'signed' ? 'bg-green-100 text-green-800' : ''}
-        ${status === 'pending' ? 'bg-yellow-100 text-yellow-800' : ''}
-        ${status === 'error' ? 'bg-red-100 text-red-800' : ''}
+        ${participant.status === 'signed' ? 'bg-green-100 text-green-800' : ''}
+        ${participant.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : ''}
+        ${participant.status === 'error' ? 'bg-red-100 text-red-800' : ''}
       `}>
-            {status}
+            {participant.status}
         </div>
     );
 };
