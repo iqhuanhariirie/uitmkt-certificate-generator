@@ -4,8 +4,9 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Timestamp } from "firebase/firestore";
 import { EventDropdown } from "@/components/EventDropdown";
 import { ClubDropdown } from "@/components/ClubDropdown";
-import { ImageIcon } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, ImageIcon } from "lucide-react";
 import Image from "next/image";
+import { Button } from '@/components/ui/button';
 
 export type Event = {
   id: string;
@@ -21,16 +22,46 @@ export type Club = {
   clubName: string;
   createdAt: Timestamp;
 };
+const SortIcon = ({ sorted }: { sorted: false | 'asc' | 'desc' }) => {
+  if (!sorted) return <ArrowUpDown className="ml-2 h-4 w-4" />;
+  if (sorted === 'asc') return <ArrowUp className="ml-2 h-4 w-4" />;
+  return <ArrowDown className="ml-2 h-4 w-4" />;
+};
 
 export const columns: ColumnDef<Event>[] = [
   {
     accessorKey: "date",
-    header: "Date",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="flex items-center justify-center w-full"
+        >
+          Date
+          <SortIcon sorted={column.getIsSorted()} />
+        </Button>
+      );
+    },
     cell: ({ row }) => {
       const date = row.getValue("date") as Timestamp;
       const seconds = date.seconds;
+      const dateObj = new Date(seconds * 1000);
       const outputDate = new Date(seconds * 1000).toLocaleDateString().split("T")[0];
-      return <div className="text-center">{outputDate}</div>;
+      return (
+        <div className="text-center">
+            {dateObj.toLocaleDateString(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            })}
+        </div>
+    );
+    },
+    sortingFn: (rowA, rowB) => {
+      const dateA = (rowA.getValue("date") as Timestamp).seconds;
+      const dateB = (rowB.getValue("date") as Timestamp).seconds;
+      return dateA - dateB;
     },
   },
   {
