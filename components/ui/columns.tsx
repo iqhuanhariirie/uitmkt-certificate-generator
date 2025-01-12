@@ -1,6 +1,6 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, SortingFn, sortingFns } from "@tanstack/react-table";
 import { Timestamp } from "firebase/firestore";
 import { EventDropdown } from "@/components/EventDropdown";
 import { ClubDropdown } from "@/components/ClubDropdown";
@@ -80,7 +80,18 @@ export const columns: ColumnDef<Event>[] = [
   },
   {
     accessorKey: "guests",
-    header: "Participants",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="flex items-center justify-center w-full"
+        >
+          Participants
+          <SortIcon sorted={column.getIsSorted()} />
+        </Button>
+      );
+    },
     cell: ({ row }) => {
       return (
         <div className="bg-[#F0F1FA] dark:bg-[#0f1a36] text-center rounded-lg py-1">
@@ -88,6 +99,7 @@ export const columns: ColumnDef<Event>[] = [
         </div>
       );
     },
+    sortingFn: sortingFns.alphanumeric
   },
   {
     id: "banner",

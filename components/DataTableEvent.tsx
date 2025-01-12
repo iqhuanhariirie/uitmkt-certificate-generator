@@ -56,6 +56,7 @@ export function DataTable<TData, TValue>({
       columnFilters,
       sorting,
     },
+    enableMultiSort: true,
   });
   if (loading) {
     return (
