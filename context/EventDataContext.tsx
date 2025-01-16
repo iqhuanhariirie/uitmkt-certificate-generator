@@ -21,7 +21,7 @@ export const EventDataContextProvider = ({ children }: { children: React.ReactNo
     try {
       setLoading(true);
       const querySnapshot = await getDocs(collection(db, "events"));
-      console.log("Raw Firestore data:", querySnapshot.docs.map(doc => doc.data())); 
+      console.log("Raw Firestore data:", querySnapshot.docs.map(doc => doc.data()));
 
       const data = querySnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -30,8 +30,24 @@ export const EventDataContextProvider = ({ children }: { children: React.ReactNo
         description: doc.data().description,
         guests: doc.data().guestList?.length || 0,
         eventBanner: doc.data().eventBanner,
+        createdAt: doc.data().createdAt ? doc.data().createdAt:doc.data().eventDate
       })) as Event[];
-      console.log("Processed event data:", data); 
+
+      // Sort by both createdAt and date
+      data.sort((a, b) => {
+        // First sort by createdAt
+        const createDiff = (b.createdAt.seconds - a.createdAt.seconds);
+        if (createDiff !== 0) return createDiff;
+
+        // If createdAt is the same, sort by event date
+        return b.date.seconds - a.date.seconds;
+      });
+      console.log('Fetched events with timestamps:', data.map(event => ({
+        name: event.name,
+        createdAt: event.createdAt?.toDate(),
+        eventDate: event.date?.toDate()
+      })));
+      console.log("Processed event data:", data);
       setEventData(data);
       setLoading(false);
     } catch (error) {

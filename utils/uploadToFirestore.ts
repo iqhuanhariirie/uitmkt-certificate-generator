@@ -99,6 +99,7 @@ export const sendDocumentToFirestore = async (payload: FormType) => {
       eventName: payload.eventName || "",
       description: payload.description || "",
       eventDate: payload.eventDate ? Timestamp.fromDate(payload.eventDate) : Timestamp.now(),
+      createdAt: serverTimestamp(),
       namePosition: {
         top: payload.namePosition.top,
         left: payload.namePosition.left,

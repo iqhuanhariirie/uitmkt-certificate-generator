@@ -30,7 +30,7 @@ import { ButtonRingLoader } from "./RingLoader";
 import CertificatePreview from "./CertificatePreview";
 import { useEffect, useState } from "react";
 import { useEventData } from "@/context/EventDataContext";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs, query, Timestamp, where } from "firebase/firestore";
 import { db } from "@/firebase/config";
 import { TemplateUpdateDialog } from "./TemplateUpdateDialog";
 import toast from "react-hot-toast";

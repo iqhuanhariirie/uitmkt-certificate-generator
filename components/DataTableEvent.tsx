@@ -40,6 +40,7 @@ export function DataTable<TData, TValue>({
   const data = eventData as TData[];
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = useState<SortingState>([
+    { id: "createdAt", desc: true },
     { id: "date", desc: true }
   ]);
 

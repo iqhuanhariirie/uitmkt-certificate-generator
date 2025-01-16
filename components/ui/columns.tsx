@@ -15,6 +15,7 @@ export type Event = {
   description: string;
   guests: number;
   eventBanner: string;
+  createdAt: Timestamp;
 };
 
 export type Club = {
@@ -30,6 +31,42 @@ const SortIcon = ({ sorted }: { sorted: false | 'asc' | 'desc' }) => {
 
 export const columns: ColumnDef<Event>[] = [
   {
+    accessorKey: "createdAt",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="flex items-center justify-center w-full"
+        >
+          Created At
+          <SortIcon sorted={column.getIsSorted()} />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const date = row.getValue("createdAt") as Timestamp;
+      const seconds = date.seconds;
+      const dateObj = new Date(seconds * 1000);
+      return (
+        <div className="text-center">
+          {dateObj.toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          })}
+        </div>
+      );
+    },
+    sortingFn: (rowA, rowB) => {
+      const timestampA = rowA.getValue("createdAt") as Timestamp;
+      const timestampB = rowB.getValue("createdAt") as Timestamp;
+      
+      if (!timestampA || !timestampB) return 0;
+      return timestampA.seconds - timestampB.seconds;
+    },
+  },
+  {
     accessorKey: "date",
     header: ({ column }) => {
       return (
@@ -38,7 +75,7 @@ export const columns: ColumnDef<Event>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="flex items-center justify-center w-full"
         >
-          Date
+          Event Date
           <SortIcon sorted={column.getIsSorted()} />
         </Button>
       );
